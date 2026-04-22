@@ -1,0 +1,138 @@
+@WebApi_HostAddress = http://localhost:5195
+@CompanyId = ""
+@EmployeeId = ""
+
+### Get user info
+GET {{WebApi_HostAddress}}/users/me
+Accept: application/json
+
+> {%
+    client.test("Get user info - Status code is 200", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+
+    client.test("Get user info - Response Content-Type is application/json", function () {
+        const contentTypeValue = response.headers.valueOf("Content-Type")
+        const contentTypes = contentTypeValue.split('; ')
+
+        client.assert(contentTypes.filter(function (v) {
+            return v === "application/json"
+        }).length > 0, "Response Content-Type is not application/json");
+        client.global.set("CompanyId", response.body.company_id);
+        client.global.set("EmployeeId", response.body.id);
+    });
+%}
+
+### Add a new expense
+
+POST {{WebApi_HostAddress}}/expense/
+Content-Type: application/json
+
+{
+    "company_id": "{{CompanyId}}",
+    "amount": 42.24,
+    "currency": "USD",
+    "category": "Office Supplies",
+    "date": "2025-07-08T12:46:24.009Z",
+    "description": "This is an expense of 42.24 dollars",
+    "employee_id": "{{EmployeeId}}"
+}
+
+> {%
+    client.test("Add a new expense - Status code is 201", function () {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+
+    client.test("Add a new expense - Response has location header", function () {
+        const locationHeader = response.headers.valueOf("Location");
+        client.assert(locationHeader != null, "Location header is not present in response");
+        client.assert(locationHeader.length > 0, "Location header is empty");
+        client.assert(locationHeader.startsWith("/expenses/"), "Location header does not start with /expenses/");
+
+
+        const expenseId = locationHeader.split('/').pop();
+        client.assert(expenseId != null && expenseId.length > 0, "Expense ID is not present");
+    });
+%}
+
+### Add a new expense
+
+POST {{WebApi_HostAddress}}/expense/
+Content-Type: application/json
+
+{
+    "company_id": "{{CompanyId}}",
+    "amount": 7.32,
+    "currency": "EUR",
+    "category": "Meals",
+    "date": "2025-06-08T12:46:24.009Z",
+    "description": "This is an expense of 7.32 euro",
+    "employee_id": "{{EmployeeId}}"
+}
+
+> {%
+    client.test("Add a new expense - Status code is 201", function () {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+
+    client.test("Add a new expense - Response has location header", function () {
+        const locationHeader = response.headers.valueOf("Location");
+        client.assert(locationHeader != null, "Location header is not present in response");
+        client.assert(locationHeader.length > 0, "Location header is empty");
+        client.assert(locationHeader.startsWith("/expenses/"), "Location header does not start with /expenses/");
+
+
+        const expenseId = locationHeader.split('/').pop();
+        client.assert(expenseId != null && expenseId.length > 0, "Expense ID is not present");
+    });
+%}
+
+### Add a new expense
+
+POST {{WebApi_HostAddress}}/expense/
+Content-Type: application/json
+
+{
+    "company_id": "{{CompanyId}}",
+    "amount": 100,
+    "currency": "EUR",
+    "category": "Travel",
+    "date": "2025-05-08T12:46:24.009Z",
+    "description": "This is an expense of 100 euro",
+    "employee_id": "{{EmployeeId}}"
+}
+
+> {%
+    client.test("Add a new expense - Status code is 201", function () {
+        client.assert(response.status === 201, "Response status is not 201");
+    });
+
+    client.test("Add a new expense - Response has location header", function () {
+        const locationHeader = response.headers.valueOf("Location");
+        client.assert(locationHeader != null, "Location header is not present in response");
+        client.assert(locationHeader.length > 0, "Location header is empty");
+        client.assert(locationHeader.startsWith("/expenses/"), "Location header does not start with /expenses/");
+
+
+        const expenseId = locationHeader.split('/').pop();
+        client.assert(expenseId != null && expenseId.length > 0, "Expense ID is not present");
+    });
+%}
+
+### Get all expenses
+
+GET {{WebApi_HostAddress}}/expense/
+Accept: application/json
+
+> {%
+    client.test("Get all expenses - Status code is 200", function () {
+        client.assert(response.status === 200, "Response status is not 200");
+    });
+
+    client.test("Get all expenses - Contains 3 expenses", function () {
+        client.assert(Array.isArray(response.body), "Response body is not an array");
+        client.assert(response.body.length === 3, "Response does not contain exactly 3 expenses");
+    });
+%}
+

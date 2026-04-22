@@ -1,0 +1,149 @@
+<div class="container mx-auto px-4 py-8">
+  <div class="mb-6">
+    <a [routerLink]="['/expenses']" class="text-blue-500 hover:text-blue-700 flex items-center">
+      <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 mr-1" viewBox="0 0 20 20" fill="currentColor">
+        <path fill-rule="evenodd" d="M9.707 14.707a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414l4-4a1 1 0 011.414 1.414L7.414 9H15a1 1 0 110 2H7.414l2.293 2.293a1 1 0 010 1.414z" clip-rule="evenodd" />
+      </svg>
+      Back to Expenses
+    </a>
+  </div>
+
+  <div class="bg-white shadow-lg rounded-lg overflow-hidden">
+    <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
+      <h1 class="text-2xl font-bold text-gray-800">Create New Expense</h1>
+    </div>
+
+    <div class="p-6">
+      <div *ngIf="error" class="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-4">
+        {{ error }}
+      </div>
+
+      <form [formGroup]="expenseForm" (ngSubmit)="onSubmit()" class="space-y-6">
+        <!-- Amount and Currency -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="amount" class="block text-sm font-medium text-gray-700">Amount *</label>
+            <div class="mt-1">
+              <input
+                type="number"
+                id="amount"
+                formControlName="amount"
+                step="0.01"
+                min="0.01"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                [ngClass]="{'border-red-500': submitted && expenseForm.get('amount')?.errors}"
+              >
+            </div>
+            <div *ngIf="submitted && expenseForm.get('amount')?.errors" class="mt-1 text-sm text-red-600">
+              <div *ngIf="expenseForm.get('amount')?.errors?.['required']">Amount is required</div>
+              <div *ngIf="expenseForm.get('amount')?.errors?.['min']">Amount must be greater than 0</div>
+            </div>
+          </div>
+
+          <div>
+            <label for="currency" class="block text-sm font-medium text-gray-700">Currency *</label>
+            <div class="mt-1">
+              <select
+                id="currency"
+                formControlName="currency"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              >
+                <option *ngFor="let currency of currencies" [value]="currency">{{ currency }}</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- Category and Date -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div>
+            <label for="category" class="block text-sm font-medium text-gray-700">Category *</label>
+            <div class="mt-1">
+              <select
+                id="category"
+                formControlName="category"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                [ngClass]="{'border-red-500': submitted && expenseForm.get('category')?.errors}"
+              >
+                <option value="">Select a category</option>
+                <option *ngFor="let category of categories" [value]="category">{{ category }}</option>
+              </select>
+            </div>
+            <div *ngIf="submitted && expenseForm.get('category')?.errors?.['required']" class="mt-1 text-sm text-red-600">
+              Category is required
+            </div>
+          </div>
+
+          <div>
+            <label for="date" class="block text-sm font-medium text-gray-700">Date *</label>
+            <div class="mt-1">
+              <input
+                type="date"
+                id="date"
+                formControlName="date"
+                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+                [ngClass]="{'border-red-500': submitted && expenseForm.get('date')?.errors}"
+              >
+            </div>
+            <div *ngIf="submitted && expenseForm.get('date')?.errors?.['required']" class="mt-1 text-sm text-red-600">
+              Date is required
+            </div>
+          </div>
+        </div>
+
+        <!-- Employee ID -->
+        <div>
+          <label for="employee_id" class="block text-sm font-medium text-gray-700">Employee ID *</label>
+          <div class="mt-1">
+            <input
+              type="text"
+              id="employee_id"
+              formControlName="employee_id"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              [ngClass]="{'border-red-500': submitted && expenseForm.get('employee_id')?.errors}"
+            >
+          </div>
+          <div *ngIf="submitted && expenseForm.get('employee_id')?.errors?.['required']" class="mt-1 text-sm text-red-600">
+            Employee ID is required
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label for="description" class="block text-sm font-medium text-gray-700">Description *</label>
+          <div class="mt-1">
+            <textarea
+              id="description"
+              formControlName="description"
+              rows="4"
+              class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
+              [ngClass]="{'border-red-500': submitted && expenseForm.get('description')?.errors}"
+            ></textarea>
+          </div>
+          <div *ngIf="submitted && expenseForm.get('description')?.errors" class="mt-1 text-sm text-red-600">
+            <div *ngIf="expenseForm.get('description')?.errors?.['required']">Description is required</div>
+            <div *ngIf="expenseForm.get('description')?.errors?.['minlength']">Description must be at least 5 characters</div>
+            <div *ngIf="expenseForm.get('description')?.errors?.['maxlength']">Description cannot exceed 500 characters</div>
+          </div>
+        </div>
+
+        <!-- Submit Button -->
+        <div class="flex justify-end">
+          <button
+            type="submit"
+            class="inline-flex justify-center py-2 px-4 border border-transparent shadow-sm text-sm font-medium rounded-md text-white bg-blue-500 hover:bg-blue-600 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500"
+            [disabled]="loading"
+          >
+            <span *ngIf="loading" class="mr-2">
+              <svg class="animate-spin h-4 w-4 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+              </svg>
+            </span>
+            {{ loading ? 'Saving...' : 'Save Expense' }}
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
