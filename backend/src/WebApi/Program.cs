@@ -33,7 +33,8 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-app.MapUserEndpoints();
+//app.MapUserEndpoints(); // TODO remove?
+app.MapControllers();
 app.MapHealthChecks("/health");
 
 app.Run();
