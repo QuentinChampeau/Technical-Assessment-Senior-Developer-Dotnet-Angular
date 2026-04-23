@@ -1,6 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators,
+} from '@angular/forms';
 import { Router, RouterLink } from '@angular/router';
 import { ExpenseService } from '../../services/expense.service';
 
@@ -9,7 +14,7 @@ import { ExpenseService } from '../../services/expense.service';
   standalone: true,
   imports: [CommonModule, ReactiveFormsModule, RouterLink],
   templateUrl: './expense-form.component.html',
-  styleUrls: ['./expense-form.component.css']
+  styleUrls: ['./expense-form.component.css'],
 })
 export class ExpenseFormComponent implements OnInit {
   expenseForm!: FormGroup;
@@ -31,13 +36,13 @@ export class ExpenseFormComponent implements OnInit {
     'Software',
     'Hardware',
     'Marketing',
-    'Other'
+    'Other',
   ];
 
   constructor(
     private fb: FormBuilder,
     private router: Router,
-    private expenseService: ExpenseService
+    private expenseService: ExpenseService,
   ) {}
 
   ngOnInit(): void {
@@ -50,14 +55,21 @@ export class ExpenseFormComponent implements OnInit {
       currency: ['USD', Validators.required],
       category: ['', Validators.required],
       date: [this.formatDateForInput(new Date()), Validators.required],
-      description: ['', [Validators.required, Validators.minLength(5), Validators.maxLength(500)]],
-      employee_id: ['', Validators.required]
+      description: [
+        '',
+        [
+          Validators.required,
+          Validators.minLength(5),
+          Validators.maxLength(500),
+        ],
+      ],
+      //employee_id: ['', Validators.required]
     });
   }
 
   onSubmit(): void {
     this.submitted = true;
-
+    console.log(this.expenseForm);
     if (this.expenseForm.invalid) {
       return;
     }
@@ -69,7 +81,7 @@ export class ExpenseFormComponent implements OnInit {
     // Convert date string to ISO format
     const expense = {
       ...formValue,
-      date: new Date(formValue.date).toISOString()
+      date: new Date(formValue.date).toISOString(),
     };
 
     this.expenseService.createExpense(expense).subscribe({
@@ -80,7 +92,7 @@ export class ExpenseFormComponent implements OnInit {
         this.error = 'Failed to create expense';
         this.loading = false;
         console.error(err);
-      }
+      },
     });
   }
 

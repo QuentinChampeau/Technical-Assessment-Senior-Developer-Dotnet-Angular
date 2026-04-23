@@ -9,7 +9,7 @@ public sealed class CreateExpenseRequest
     [MaxLength(200)]
     public string Description { get; set; } = string.Empty;
 
-    [Range(typeof(decimal), "0.01", "99999.99999")]
+    [Range(0.01, 99999.99)]
     public decimal Amount { get; set; }
 
     [Required]
