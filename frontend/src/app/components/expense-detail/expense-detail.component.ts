@@ -9,7 +9,7 @@ import { Expense } from '../../models/expense.model';
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './expense-detail.component.html',
-  styleUrls: ['./expense-detail.component.css']
+  styleUrls: ['./expense-detail.component.css'],
 })
 export class ExpenseDetailComponent implements OnInit {
   expense: Expense | undefined;
@@ -19,7 +19,7 @@ export class ExpenseDetailComponent implements OnInit {
   constructor(
     private route: ActivatedRoute,
     private router: Router,
-    private expenseService: ExpenseService
+    private expenseService: ExpenseService,
   ) {}
 
   ngOnInit(): void {
@@ -47,7 +47,7 @@ export class ExpenseDetailComponent implements OnInit {
         this.error = 'Failed to load expense details';
         this.loading = false;
         console.error(err);
-      }
+      },
     });
   }
 
@@ -55,7 +55,7 @@ export class ExpenseDetailComponent implements OnInit {
     if (!this.expense) return;
 
     if (confirm('Are you sure you want to delete this expense?')) {
-      this.expenseService.deleteExpense(this.expense.company_id).subscribe({
+      /*this.expenseService.deleteExpense(this.expense.company_id).subscribe({
         next: (success) => {
           if (success) {
             this.router.navigate(['/expenses']);
@@ -67,7 +67,7 @@ export class ExpenseDetailComponent implements OnInit {
           this.error = 'Failed to delete expense';
           console.error(err);
         }
-      });
+      });*/
     }
   }
 
