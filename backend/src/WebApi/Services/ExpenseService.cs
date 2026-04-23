@@ -72,6 +72,21 @@ public sealed class ExpenseService(
         return response;
     }
 
+    public async Task<bool> DeleteByIdAsync(Guid id, CancellationToken cancellationToken)
+    {
+        var expense = await expenseRepository.GetByIdAsync(id, cancellationToken);
+
+        if (expense is null)
+        {
+            return false;
+        }
+
+        expenseRepository.Delete(expense);
+        await expenseRepository.SaveChangesAsync(cancellationToken);
+
+        return true;
+    }
+
     public async Task<IReadOnlyCollection<AuditEntryResponse>> GetHistoryAsync(Guid id, CancellationToken cancellationToken)
     {
         var history = await auditRepository.GetEntityHistoryAsync(

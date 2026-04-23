@@ -55,19 +55,18 @@ export class ExpenseDetailComponent implements OnInit {
     if (!this.expense) return;
 
     if (confirm('Are you sure you want to delete this expense?')) {
-      /*this.expenseService.deleteExpense(this.expense.company_id).subscribe({
-        next: (success) => {
-          if (success) {
-            this.router.navigate(['/expenses']);
-          } else {
-            this.error = 'Failed to delete expense';
-          }
+      this.expenseService.deleteExpense(this.expense.id).subscribe({
+        next: () => {
+          this.router.navigate(['/expenses']);
         },
         error: (err) => {
-          this.error = 'Failed to delete expense';
+          this.error =
+            err.status === 404
+              ? 'Expense not found'
+              : 'Failed to delete expense';
           console.error(err);
-        }
-      });*/
+        },
+      });
     }
   }
 

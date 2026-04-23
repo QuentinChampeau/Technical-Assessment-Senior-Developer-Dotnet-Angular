@@ -12,5 +12,7 @@ public interface IExpenseRepository
         string? category,
         string? search,
         CancellationToken cancellationToken);
+    void Delete(Expense entity);
+
     Task SaveChangesAsync(CancellationToken cancellationToken);
 }

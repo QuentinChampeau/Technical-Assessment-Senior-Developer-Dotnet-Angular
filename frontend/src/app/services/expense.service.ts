@@ -1,6 +1,6 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { HttpClient, HttpParams } from '@angular/common/http';
+import { Observable, of } from 'rxjs';
 import { CreateExpenseRequest, Expense } from '../models/expense.model';
 
 interface PagedResponse<T> {
@@ -49,5 +49,9 @@ export class ExpenseService {
 
   createExpense(expense: CreateExpenseRequest): Observable<Expense> {
     return this.http.post<Expense>(this.apiUrl, expense);
+  }
+
+  deleteExpense(id: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${id}`);
   }
 }

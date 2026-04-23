@@ -39,25 +39,25 @@ export class ExpenseListComponent implements OnInit {
     });
   }
 
-  deleteExpense(companyId: string, event: Event): void {
+  deleteExpense(id: string, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
 
+    this.error = '';
+
     if (confirm('Are you sure you want to delete this expense?')) {
-      // TODO
-      /*this.expenseService.deleteExpense(companyId).subscribe({
-        next: (success) => {
-          if (success) {
-            this.loadExpenses();
-          } else {
-            this.error = 'Failed to delete expense';
-          }
+      this.expenseService.deleteExpense(id).subscribe({
+        next: () => {
+          this.loadExpenses();
         },
         error: (err) => {
-          this.error = 'Failed to delete expense';
+          this.error =
+            err.status === 404
+              ? 'Expense not found'
+              : 'Failed to delete expense';
           console.error(err);
-        }
-      });*/
+        },
+      });
     }
   }
 
