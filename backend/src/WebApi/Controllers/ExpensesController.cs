@@ -65,6 +65,23 @@ public sealed class ExpensesController(IExpenseService expenseService) : Control
         return Ok(expense);
     }
 
+    [HttpDelete("{id:guid}")]
+    [ProducesResponseType(StatusCodes.Status204NoContent)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<IActionResult> DeleteExpenseById(
+    Guid id,
+    CancellationToken cancellationToken)
+    {
+        var isDeleted = await expenseService.DeleteByIdAsync(id, cancellationToken);
+
+        if (!isDeleted)
+        {
+            return NotFound();
+        }
+
+        return NoContent();
+    }
+
     [HttpGet("{id:guid}/history")]
     [ProducesResponseType(typeof(IReadOnlyCollection<AuditEntryResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<IReadOnlyCollection<AuditEntryResponse>>> GetExpenseHistory(

@@ -161,18 +161,18 @@ Your implementation must include:
 
 ### Backend
 
-- [ ] All three endpoints are functional and tested
+- [x] All three endpoints are functional and tested
 - [ ] Proper input validation and error handling
 - [ ] Redis integration working correctly
 - [ ] Clean, readable, and maintainable code
-- [ ] Appropriate use of HTTP status codes
+- [x] Appropriate use of HTTP status codes
 - [ ] Basic logging implementation
 
 ### Frontend
 
 - [ ] Responsive UI that works on mobile and desktop
 - [ ] Implementation of all required features (dashboard, expense creation, viewing)
-- [ ] Proper integration with backend API endpoints
+- [x] Proper integration with backend API endpoints
 - [ ] Clean, readable, and maintainable code
 - [ ] Proper form validation and error handling
 - [ ] Consistent styling and user experience

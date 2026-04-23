@@ -9,14 +9,19 @@ public sealed class ExpenseRepository(AppDbContext dbContext) : IExpenseReposito
 {
     public async Task AddAsync(Expense expense, CancellationToken cancellationToken)
     {
+        expense.CreatedAtUtc = DateTime.UtcNow;
         await dbContext.Expenses.AddAsync(expense, cancellationToken);
     }
 
     public async Task<Expense?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         return await dbContext.Expenses
-            .AsNoTracking()
             .FirstOrDefaultAsync(x => x.Id == id, cancellationToken);
+    }
+
+    public void Delete(Expense entity)
+    {
+        dbContext.Expenses.Remove(entity);
     }
 
     public async Task<(IReadOnlyCollection<Expense> Items, int TotalCount)> GetPagedAsync(

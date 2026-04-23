@@ -9,14 +9,14 @@ import { Expense } from '../../models/expense.model';
   standalone: true,
   imports: [CommonModule, RouterLink],
   templateUrl: './expense-list.component.html',
-  styleUrls: ['./expense-list.component.css']
+  styleUrls: ['./expense-list.component.css'],
 })
 export class ExpenseListComponent implements OnInit {
   expenses: Expense[] = [];
   loading = true;
   error = '';
 
-  constructor(private expenseService: ExpenseService) {}
+  constructor(private readonly expenseService: ExpenseService) {}
 
   ngOnInit(): void {
     this.loadExpenses();
@@ -24,36 +24,39 @@ export class ExpenseListComponent implements OnInit {
 
   loadExpenses(): void {
     this.loading = true;
+    this.error = '';
+
     this.expenseService.getExpenses().subscribe({
       next: (expenses) => {
-        this.expenses = expenses;
+        this.expenses = expenses.items;
         this.loading = false;
       },
       error: (err) => {
         this.error = 'Failed to load expenses';
         this.loading = false;
         console.error(err);
-      }
+      },
     });
   }
 
-  deleteExpense(companyId: string, event: Event): void {
+  deleteExpense(id: string, event: Event): void {
     event.preventDefault();
     event.stopPropagation();
 
+    this.error = '';
+
     if (confirm('Are you sure you want to delete this expense?')) {
-      this.expenseService.deleteExpense(companyId).subscribe({
-        next: (success) => {
-          if (success) {
-            this.loadExpenses();
-          } else {
-            this.error = 'Failed to delete expense';
-          }
+      this.expenseService.deleteExpense(id).subscribe({
+        next: () => {
+          this.loadExpenses();
         },
         error: (err) => {
-          this.error = 'Failed to delete expense';
+          this.error =
+            err.status === 404
+              ? 'Expense not found'
+              : 'Failed to delete expense';
           console.error(err);
-        }
+        },
       });
     }
   }

@@ -1,11 +1,24 @@
 export interface Expense {
-  company_id: string;
+  id: string;
+  description: string;
   amount: number;
-  currency: string;
   category: string;
   date: string;
+  createdAtUtc: string;
+  updatedAtUtc: string;
+}
+
+export interface PagedResponse<T> {
+  items: T[];
+  page: number;
+  pageSize: number;
+  totalCount: number;
+  totalPages: number;
+}
+
+export interface CreateExpenseRequest {
   description: string;
-  employee_id: string;
-  created_at: string;
-  updated_at: string;
+  amount: number;
+  category: string;
+  date: string;
 }

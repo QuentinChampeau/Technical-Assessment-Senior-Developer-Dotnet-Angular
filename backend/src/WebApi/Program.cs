@@ -11,6 +11,16 @@ builder.Services
     .AddOpenApi()
     .AddPersistence();
 builder.Services.AddHealthChecks();
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AngularFrontend", policy =>
+    {
+        policy
+            .WithOrigins("http://localhost:4200")
+            .AllowAnyHeader()
+            .AllowAnyMethod();
+    });
+});
 
 var app = builder.Build();
 
@@ -27,11 +37,12 @@ if (app.Environment.IsDevelopment())
         app.Services.GetRequiredService<ILogger<Program>>()
             .LogError(e, "An error occurred while migrating the database.");
         return;
-    } 
+    }
     app.MapOpenApi();
 }
 
 app.UseHttpsRedirection();
+app.UseCors("AngularFrontend");
 
 //app.MapUserEndpoints(); // TODO remove?
 app.MapControllers();
