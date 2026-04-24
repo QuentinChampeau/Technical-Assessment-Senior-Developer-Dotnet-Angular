@@ -66,78 +66,20 @@
       *ngIf="expenses.length > 0"
       class="grid grid-cols-1 xl:grid-cols-3 gap-6"
     >
-      <div class="xl:col-span-2 bg-white shadow rounded-lg overflow-hidden">
-        <div class="px-6 py-4 border-b border-gray-200">
-          <h2 class="text-lg font-semibold text-gray-800">Recent Expenses</h2>
-        </div>
-
-        <div class="overflow-x-auto">
-          <table class="min-w-full divide-y divide-gray-200">
-            <thead class="bg-gray-50">
-              <tr>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Date
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Category
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Description
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Amount
-                </th>
-                <th
-                  class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
-                >
-                  Actions
-                </th>
-              </tr>
-            </thead>
-
-            <tbody class="bg-white divide-y divide-gray-200">
-              <tr
-                *ngFor="let expense of expenses"
-                class="hover:bg-gray-50 cursor-pointer"
-                [routerLink]="['/expenses', expense.id]"
-              >
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ formatDate(expense.date) }}
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  {{ expense.category }}
-                </td>
-                <td class="px-6 py-4">
-                  <div class="text-sm text-gray-900 truncate max-w-xs">
-                    {{ expense.description }}
-                  </div>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap">
-                  <span class="text-sm font-medium text-gray-900">
-                    {{ expense.amount | number: "1.2-2" }}
-                  </span>
-                </td>
-                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
-                  <button
-                    (click)="deleteExpense(expense.id, $event)"
-                    class="text-red-600 hover:text-red-900"
-                  >
-                    Delete
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </div>
+      <app-expense-list-table
+        class="xl:col-span-2"
+        [expenses]="expenses"
+        [page]="page"
+        [pageSize]="pageSize"
+        [totalCount]="totalCount"
+        [sortBy]="sortBy"
+        [sortDirection]="sortDirection"
+        (sortChange)="changeSort($event)"
+        (pageChange)="changePage($event)"
+        (pageSizeChange)="changePageSize($event)"
+        (delete)="onDeleteExpense($event)"
+      >
+      </app-expense-list-table>
 
       <div class="space-y-6">
         <div class="bg-white shadow rounded-lg p-5">

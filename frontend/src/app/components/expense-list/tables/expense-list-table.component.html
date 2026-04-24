@@ -1,0 +1,114 @@
+<div class="bg-white shadow rounded-lg overflow-hidden">
+  <div class="px-6 py-4 border-b border-gray-200">
+    <h2 class="text-lg font-semibold text-gray-800">Expense List</h2>
+  </div>
+
+  <div class="overflow-x-auto">
+    <table class="min-w-full divide-y divide-gray-200">
+      <thead class="bg-gray-50">
+        <tr>
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            <button
+              type="button"
+              (click)="onSort('date', $event)"
+              class="hover:text-gray-900"
+            >
+              Date {{ getSortIcon("date") }}
+            </button>
+          </th>
+
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            <button
+              type="button"
+              (click)="onSort('category', $event)"
+              class="hover:text-gray-900"
+            >
+              Category {{ getSortIcon("category") }}
+            </button>
+          </th>
+
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            <button
+              type="button"
+              (click)="onSort('description', $event)"
+              class="hover:text-gray-900"
+            >
+              Description {{ getSortIcon("description") }}
+            </button>
+          </th>
+
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            <button
+              type="button"
+              (click)="onSort('amount', $event)"
+              class="hover:text-gray-900"
+            >
+              Amount {{ getSortIcon("amount") }}
+            </button>
+          </th>
+
+          <th
+            class="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+          >
+            Actions
+          </th>
+        </tr>
+      </thead>
+
+      <tbody class="bg-white divide-y divide-gray-200">
+        <tr
+          *ngFor="let expense of expenses()"
+          class="hover:bg-gray-50 cursor-pointer"
+          [routerLink]="['/expenses', expense.id]"
+        >
+          <td class="px-6 py-4 whitespace-nowrap">
+            {{ formatDate(expense.date) }}
+          </td>
+
+          <td class="px-6 py-4 whitespace-nowrap">
+            {{ expense.category }}
+          </td>
+
+          <td class="px-6 py-4">
+            <div class="text-sm text-gray-900 truncate max-w-xs">
+              {{ expense.description }}
+            </div>
+          </td>
+
+          <td class="px-6 py-4 whitespace-nowrap">
+            <span class="text-sm font-medium text-gray-900">
+              {{ expense.amount | number: "1.2-2" }}
+            </span>
+          </td>
+
+          <td class="px-6 py-4 whitespace-nowrap text-sm font-medium">
+            <button
+              type="button"
+              (click)="onDelete(expense.id, $event)"
+              class="text-red-600 hover:text-red-900"
+            >
+              Delete
+            </button>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+  <app-pagination
+    [page]="page()"
+    [pageSize]="pageSize()"
+    [totalCount]="totalCount()"
+    (pageChange)="pageChange.emit($event)"
+    (pageSizeChange)="pageSizeChange.emit($event)"
+  >
+  </app-pagination>
+</div>

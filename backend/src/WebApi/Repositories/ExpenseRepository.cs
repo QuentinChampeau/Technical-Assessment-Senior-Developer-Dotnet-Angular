@@ -25,11 +25,13 @@ public sealed class ExpenseRepository(AppDbContext dbContext) : IExpenseReposito
     }
 
     public async Task<(IReadOnlyCollection<Expense> Items, int TotalCount)> GetPagedAsync(
-        int page,
-        int pageSize,
-        string? category,
-        string? search,
-        CancellationToken cancellationToken)
+     int page,
+     int pageSize,
+     string? category,
+     string? search,
+     string? sortBy,
+     string? sortDirection,
+     CancellationToken cancellationToken)
     {
         IQueryable<Expense> query = dbContext.Expenses.AsNoTracking();
 
@@ -43,8 +45,26 @@ public sealed class ExpenseRepository(AppDbContext dbContext) : IExpenseReposito
             query = query.Where(x => x.Description.Contains(search));
         }
 
-        query = query.OrderByDescending(x => x.Date)
-                     .ThenByDescending(x => x.CreatedAtUtc);
+        var isDescending = string.Equals(sortDirection, "desc", StringComparison.OrdinalIgnoreCase);
+
+        query = sortBy?.ToLowerInvariant() switch
+        {
+            "amount" => isDescending
+                ? query.OrderByDescending(x => x.Amount)
+                : query.OrderBy(x => x.Amount),
+
+            "category" => isDescending
+                ? query.OrderByDescending(x => x.Category)
+                : query.OrderBy(x => x.Category),
+
+            "description" => isDescending
+                ? query.OrderByDescending(x => x.Description)
+                : query.OrderBy(x => x.Description),
+
+            "date" or _ => isDescending
+                ? query.OrderByDescending(x => x.Date)
+                : query.OrderBy(x => x.Date)
+        };
 
         var totalCount = await query.CountAsync(cancellationToken);
 

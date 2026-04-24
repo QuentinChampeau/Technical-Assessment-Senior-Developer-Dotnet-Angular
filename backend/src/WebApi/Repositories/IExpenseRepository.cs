@@ -11,6 +11,8 @@ public interface IExpenseRepository
         int pageSize,
         string? category,
         string? search,
+        string? sortBy,
+        string? sortDirection,
         CancellationToken cancellationToken);
     void Delete(Expense entity);
 

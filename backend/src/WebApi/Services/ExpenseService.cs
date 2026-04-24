@@ -35,6 +35,8 @@ public sealed class ExpenseService(
         int pageSize,
         string? category,
         string? search,
+        string? sortBy,
+        string? sortDirection,
         CancellationToken cancellationToken)
     {
         page = page <= 0 ? 1 : page;
@@ -45,6 +47,8 @@ public sealed class ExpenseService(
             pageSize,
             category,
             search,
+            sortBy,
+            sortDirection,
             cancellationToken);
 
         var mappedItems = items.Select(MapToResponse).ToList();

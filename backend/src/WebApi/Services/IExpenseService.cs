@@ -11,6 +11,8 @@ public interface IExpenseService
         int pageSize,
         string? category,
         string? search,
+        string? sortBy,
+        string? sortDirection,
         CancellationToken cancellationToken);
     Task<ExpenseResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<bool> DeleteByIdAsync(Guid id, CancellationToken cancellationToken);

@@ -31,6 +31,8 @@ public sealed class ExpensesController(IExpenseService expenseService) : Control
         [FromQuery] int pageSize = 10,
         [FromQuery] string? category = null,
         [FromQuery] string? search = null,
+        [FromQuery] string? sortBy = "date",
+        [FromQuery] string? sortDirection = "desc",
         CancellationToken cancellationToken = default)
     {
         var result = await expenseService.GetPagedAsync(
@@ -38,6 +40,8 @@ public sealed class ExpensesController(IExpenseService expenseService) : Control
             pageSize,
             category,
             search,
+            sortBy,
+            sortDirection,
             cancellationToken);
 
         return Ok(result);

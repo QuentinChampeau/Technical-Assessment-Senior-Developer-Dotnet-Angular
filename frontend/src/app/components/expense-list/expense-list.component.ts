@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
 import { ExpenseService } from '../../services/expense.service';
 import { Expense } from '../../models/expense.model';
+import { ExpenseListTableComponent } from './tables/expense-list-table.component';
 
 type CategoryBreakdown = {
   category: string;
@@ -16,7 +17,7 @@ type monthlyBreakdown = { month: string; total: number };
 @Component({
   selector: 'app-expense-list',
   standalone: true,
-  imports: [CommonModule, RouterLink],
+  imports: [CommonModule, RouterLink, ExpenseListTableComponent],
   templateUrl: './expense-list.component.html',
   styleUrls: ['./expense-list.component.css'],
 })
@@ -29,6 +30,28 @@ export class ExpenseListComponent implements OnInit {
   totalAmount = 0;
   averageAmount = 0;
   topCategory = '—';
+
+  page = 1;
+  pageSize = 10;
+  totalPages = 0;
+
+  search = '';
+  selectedCategory = '';
+  sortBy = 'date';
+  sortDirection: 'asc' | 'desc' = 'desc';
+
+  categories = [
+    'Office Supplies',
+    'Travel',
+    'Meals',
+    'Entertainment',
+    'Transportation',
+    'Accommodation',
+    'Software',
+    'Hardware',
+    'Marketing',
+    'Other',
+  ];
 
   categoryBreakdown: CategoryBreakdown[] = [];
   monthlyBreakdown: monthlyBreakdown[] = [];
@@ -43,46 +66,30 @@ export class ExpenseListComponent implements OnInit {
     this.loading = true;
     this.error = '';
 
-    this.expenseService.getExpenses().subscribe({
-      next: (response) => {
-        this.expenses = response.items;
-        this.totalCount = response.totalCount;
+    this.expenseService
+      .getExpenses(
+        this.page,
+        this.pageSize,
+        this.selectedCategory || undefined,
+        this.search || undefined,
+        this.sortBy,
+        this.sortDirection,
+      )
+      .subscribe({
+        next: (response) => {
+          this.expenses = response.items;
+          this.totalCount = response.totalCount;
+          this.totalPages = response.totalPages;
 
-        this.computeDashboardMetrics();
-        this.loading = false;
-      },
-      error: (err) => {
-        this.error = 'Failed to load expenses';
-        this.loading = false;
-        console.error(err);
-      },
-    });
-  }
-
-  deleteExpense(id: string, event: Event): void {
-    event.preventDefault();
-    event.stopPropagation();
-
-    this.error = '';
-
-    if (confirm('Are you sure you want to delete this expense?')) {
-      this.expenseService.deleteExpense(id).subscribe({
-        next: () => {
-          this.loadExpenses();
+          this.computeDashboardMetrics();
+          this.loading = false;
         },
         error: (err) => {
-          this.error =
-            err.status === 404
-              ? 'Expense not found'
-              : 'Failed to delete expense';
+          this.error = 'Failed to load expenses';
+          this.loading = false;
           console.error(err);
         },
       });
-    }
-  }
-
-  formatDate(dateString: string): string {
-    return new Date(dateString).toLocaleDateString();
   }
 
   private computeDashboardMetrics(): void {
@@ -132,5 +139,66 @@ export class ExpenseListComponent implements OnInit {
     this.monthlyBreakdown = Array.from(monthMap.entries())
       .map(([month, total]) => ({ month, total }))
       .sort((a, b) => a.month.localeCompare(b.month));
+  }
+
+  onDeleteExpense(id: string): void {
+    this.error = '';
+
+    if (confirm('Are you sure you want to delete this expense?')) {
+      this.expenseService.deleteExpense(id).subscribe({
+        next: () => {
+          this.loadExpenses();
+        },
+        error: (err) => {
+          this.error =
+            err.status === 404
+              ? 'Expense not found'
+              : 'Failed to delete expense';
+          console.error(err);
+        },
+      });
+    }
+  }
+
+  applyFilters(): void {
+    this.page = 1;
+    this.loadExpenses();
+  }
+
+  clearFilters(): void {
+    this.search = '';
+    this.selectedCategory = '';
+    this.sortBy = 'date';
+    this.sortDirection = 'desc';
+    this.page = 1;
+    this.loadExpenses();
+  }
+
+  changePage(newPage: number): void {
+    if (newPage < 1 || newPage > this.totalPages) {
+      return;
+    }
+
+    this.page = newPage;
+    this.loadExpenses();
+  }
+
+  changeSort(column: string): void {
+    console.log('sort', this.sortBy, this.sortDirection);
+    if (this.sortBy === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = column;
+      this.sortDirection = 'asc';
+    }
+
+    this.page = 1;
+    this.loadExpenses();
+  }
+
+  changePageSize(size: number) {
+    this.pageSize = size;
+    this.page = 1;
+    this.loadExpenses();
   }
 }
