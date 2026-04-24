@@ -5,6 +5,7 @@ import { ExpenseService } from '../../services/expense.service';
 import { Expense } from '../../models/expense.model';
 import { ExpenseListTableComponent } from './tables/expense-list-table.component';
 import { FormsModule } from '@angular/forms';
+import { ExpenseDashboardChartsComponent } from './charts/expense-dashboard-charts.component';
 
 type CategoryBreakdown = {
   category: string;
@@ -18,7 +19,13 @@ type monthlyBreakdown = { month: string; total: number };
 @Component({
   selector: 'app-expense-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, FormsModule, ExpenseListTableComponent],
+  imports: [
+    CommonModule,
+    RouterLink,
+    FormsModule,
+    ExpenseListTableComponent,
+    ExpenseDashboardChartsComponent,
+  ],
   templateUrl: './expense-list.component.html',
   styleUrls: ['./expense-list.component.css'],
 })

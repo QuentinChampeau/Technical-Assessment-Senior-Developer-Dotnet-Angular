@@ -1,0 +1,27 @@
+<div class="grid grid-cols-1 xl:grid-cols-2 gap-6 mb-8">
+  <div class="bg-white shadow rounded-lg p-5">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">
+      Expenses by Category
+    </h2>
+
+    <div *ngIf="expenses().length === 0" class="text-sm text-gray-500">
+      No category data available.
+    </div>
+
+    <div *ngIf="expenses().length > 0" class="h-72">
+      <canvas #categoryChartCanvas></canvas>
+    </div>
+  </div>
+
+  <div class="bg-white shadow rounded-lg p-5">
+    <h2 class="text-lg font-semibold text-gray-800 mb-4">Monthly Expenses</h2>
+
+    <div *ngIf="expenses().length === 0" class="text-sm text-gray-500">
+      No monthly data available.
+    </div>
+
+    <div *ngIf="expenses().length > 0" class="h-72">
+      <canvas #monthlyChartCanvas></canvas>
+    </div>
+  </div>
+</div>
