@@ -24,10 +24,14 @@ export class ExpenseService {
     pageSize: number = 10,
     category?: string,
     search?: string,
+    sortBy: string = 'date',
+    sortDirection: 'asc' | 'desc' = 'desc',
   ): Observable<PagedResponse<Expense>> {
     const params = new URLSearchParams({
       page: page.toString(),
       pageSize: pageSize.toString(),
+      sortBy,
+      sortDirection,
     });
 
     if (category) {

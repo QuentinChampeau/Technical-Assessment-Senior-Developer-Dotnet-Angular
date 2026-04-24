@@ -1,0 +1,43 @@
+<div
+  class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 px-6 py-4 bg-gray-50 border-t border-gray-200"
+>
+  <div class="text-sm text-gray-600">
+    Showing {{ startItem() }}–{{ endItem() }} of {{ totalCount() }} expense(s)
+  </div>
+
+  <div class="flex items-center gap-3">
+    <label class="text-sm text-gray-600">Rows per page</label>
+
+    <select
+      [value]="pageSize()"
+      (change)="onPageSizeChange($event)"
+      class="rounded-md border-gray-300 shadow-sm text-sm"
+    >
+      <option *ngFor="let option of pageSizeOptions()" [value]="option">
+        {{ option }}
+      </option>
+    </select>
+
+    <button
+      type="button"
+      (click)="previous()"
+      [disabled]="page() <= 1"
+      class="px-3 py-1 rounded border bg-white disabled:opacity-50"
+    >
+      Previous
+    </button>
+
+    <span class="text-sm text-gray-600">
+      Page {{ page() }} of {{ totalPages() }}
+    </span>
+
+    <button
+      type="button"
+      (click)="next()"
+      [disabled]="page() >= totalPages()"
+      class="px-3 py-1 rounded border bg-white disabled:opacity-50"
+    >
+      Next
+    </button>
+  </div>
+</div>

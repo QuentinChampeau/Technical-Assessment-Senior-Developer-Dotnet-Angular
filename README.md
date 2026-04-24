@@ -170,8 +170,8 @@ Your implementation must include:
 
 ### Frontend
 
-- [ ] Responsive UI that works on mobile and desktop
-- [ ] Implementation of all required features (dashboard, expense creation, viewing)
+- [x] Responsive UI that works on mobile and desktop
+- [x] Implementation of all required features (dashboard, expense creation, viewing)
 - [x] Proper integration with backend API endpoints
 - [ ] Clean, readable, and maintainable code
 - [ ] Proper form validation and error handling
