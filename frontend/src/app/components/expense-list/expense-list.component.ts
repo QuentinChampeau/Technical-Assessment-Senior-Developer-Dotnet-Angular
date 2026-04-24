@@ -4,6 +4,7 @@ import { RouterLink } from '@angular/router';
 import { ExpenseService } from '../../services/expense.service';
 import { Expense } from '../../models/expense.model';
 import { ExpenseListTableComponent } from './tables/expense-list-table.component';
+import { FormsModule } from '@angular/forms';
 
 type CategoryBreakdown = {
   category: string;
@@ -17,13 +18,16 @@ type monthlyBreakdown = { month: string; total: number };
 @Component({
   selector: 'app-expense-list',
   standalone: true,
-  imports: [CommonModule, RouterLink, ExpenseListTableComponent],
+  imports: [CommonModule, RouterLink, FormsModule, ExpenseListTableComponent],
   templateUrl: './expense-list.component.html',
   styleUrls: ['./expense-list.component.css'],
 })
 export class ExpenseListComponent implements OnInit {
+  dashboardExpenses: Expense[] = [];
   expenses: Expense[] = [];
-  loading = true;
+
+  loadingDashboard = true;
+  loadingTable = true;
   error = '';
 
   totalCount = 0;
@@ -31,10 +35,11 @@ export class ExpenseListComponent implements OnInit {
   averageAmount = 0;
   topCategory = '—';
 
+  tableTotalCount = 0;
+  tableTotalPages = 0;
+
   page = 1;
   pageSize = 10;
-  totalPages = 0;
-
   search = '';
   selectedCategory = '';
   sortBy = 'date';
@@ -59,11 +64,30 @@ export class ExpenseListComponent implements OnInit {
   constructor(private readonly expenseService: ExpenseService) {}
 
   ngOnInit(): void {
-    this.loadExpenses();
+    this.loadDashboardExpenses();
+    this.loadTableExpenses();
   }
 
-  loadExpenses(): void {
-    this.loading = true;
+  loadDashboardExpenses(): void {
+    this.loadingDashboard = true;
+    this.error = '';
+
+    this.expenseService.getExpenses(1, 1000).subscribe({
+      next: (response) => {
+        this.dashboardExpenses = response.items;
+        this.computeDashboardMetrics();
+        this.loadingDashboard = false;
+      },
+      error: (err) => {
+        this.error = 'Failed to load dashboard data';
+        this.loadingDashboard = false;
+        console.error(err);
+      },
+    });
+  }
+
+  loadTableExpenses(): void {
+    this.loadingTable = true;
     this.error = '';
 
     this.expenseService
@@ -78,38 +102,96 @@ export class ExpenseListComponent implements OnInit {
       .subscribe({
         next: (response) => {
           this.expenses = response.items;
-          this.totalCount = response.totalCount;
-          this.totalPages = response.totalPages;
-
-          this.computeDashboardMetrics();
-          this.loading = false;
+          this.tableTotalCount = response.totalCount;
+          this.tableTotalPages = response.totalPages;
+          this.loadingTable = false;
         },
         error: (err) => {
           this.error = 'Failed to load expenses';
-          this.loading = false;
+          this.loadingTable = false;
           console.error(err);
         },
       });
   }
 
+  onFiltersChange(filters: { search: string; category: string }): void {
+    this.search = filters.search;
+    this.selectedCategory = filters.category;
+    this.page = 1;
+    this.loadTableExpenses();
+  }
+
+  onSortChange(column: string): void {
+    if (this.sortBy === column) {
+      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.sortBy = column;
+      this.sortDirection = 'asc';
+    }
+
+    this.page = 1;
+    this.loadTableExpenses();
+  }
+
+  onPageChange(page: number): void {
+    if (page < 1 || page > this.tableTotalPages) {
+      return;
+    }
+
+    this.page = page;
+    this.loadTableExpenses();
+  }
+
+  onPageSizeChange(pageSize: number): void {
+    this.pageSize = pageSize;
+    this.page = 1;
+    this.loadTableExpenses();
+  }
+
+  onDeleteExpense(id: string): void {
+    this.error = '';
+
+    if (!confirm('Are you sure you want to delete this expense?')) {
+      return;
+    }
+
+    this.expenseService.deleteExpense(id).subscribe({
+      next: () => {
+        this.loadDashboardExpenses();
+        this.loadTableExpenses();
+      },
+      error: (err) => {
+        this.error =
+          err.status === 404 ? 'Expense not found' : 'Failed to delete expense';
+        console.error(err);
+      },
+    });
+  }
+
   private computeDashboardMetrics(): void {
-    this.totalAmount = this.expenses.reduce(
+    this.totalCount = this.dashboardExpenses.length;
+
+    this.totalAmount = this.dashboardExpenses.reduce(
       (sum, expense) => sum + expense.amount,
       0,
     );
 
     this.averageAmount =
-      this.expenses.length > 0 ? this.totalAmount / this.expenses.length : 0;
+      this.dashboardExpenses.length > 0
+        ? this.totalAmount / this.dashboardExpenses.length
+        : 0;
 
     const categoryMap = new Map<string, { total: number; count: number }>();
 
-    for (const expense of this.expenses) {
+    for (const expense of this.dashboardExpenses) {
       const current = categoryMap.get(expense.category) ?? {
         total: 0,
         count: 0,
       };
+
       current.total += expense.amount;
       current.count += 1;
+
       categoryMap.set(expense.category, current);
     }
 
@@ -130,75 +212,17 @@ export class ExpenseListComponent implements OnInit {
 
     const monthMap = new Map<string, number>();
 
-    for (const expense of this.expenses) {
+    for (const expense of this.dashboardExpenses) {
       const date = new Date(expense.date);
-      const monthKey = `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}`;
+      const monthKey = `${date.getFullYear()}-${String(
+        date.getMonth() + 1,
+      ).padStart(2, '0')}`;
+
       monthMap.set(monthKey, (monthMap.get(monthKey) ?? 0) + expense.amount);
     }
 
     this.monthlyBreakdown = Array.from(monthMap.entries())
       .map(([month, total]) => ({ month, total }))
       .sort((a, b) => a.month.localeCompare(b.month));
-  }
-
-  onDeleteExpense(id: string): void {
-    this.error = '';
-
-    if (confirm('Are you sure you want to delete this expense?')) {
-      this.expenseService.deleteExpense(id).subscribe({
-        next: () => {
-          this.loadExpenses();
-        },
-        error: (err) => {
-          this.error =
-            err.status === 404
-              ? 'Expense not found'
-              : 'Failed to delete expense';
-          console.error(err);
-        },
-      });
-    }
-  }
-
-  applyFilters(): void {
-    this.page = 1;
-    this.loadExpenses();
-  }
-
-  clearFilters(): void {
-    this.search = '';
-    this.selectedCategory = '';
-    this.sortBy = 'date';
-    this.sortDirection = 'desc';
-    this.page = 1;
-    this.loadExpenses();
-  }
-
-  changePage(newPage: number): void {
-    if (newPage < 1 || newPage > this.totalPages) {
-      return;
-    }
-
-    this.page = newPage;
-    this.loadExpenses();
-  }
-
-  changeSort(column: string): void {
-    console.log('sort', this.sortBy, this.sortDirection);
-    if (this.sortBy === column) {
-      this.sortDirection = this.sortDirection === 'asc' ? 'desc' : 'asc';
-    } else {
-      this.sortBy = column;
-      this.sortDirection = 'asc';
-    }
-
-    this.page = 1;
-    this.loadExpenses();
-  }
-
-  changePageSize(size: number) {
-    this.pageSize = size;
-    this.page = 1;
-    this.loadExpenses();
   }
 }
