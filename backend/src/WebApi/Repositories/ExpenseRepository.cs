@@ -9,7 +9,6 @@ public sealed class ExpenseRepository(AppDbContext dbContext) : IExpenseReposito
 {
     public async Task AddAsync(Expense expense, CancellationToken cancellationToken)
     {
-        expense.CreatedAtUtc = DateTime.UtcNow;
         await dbContext.Expenses.AddAsync(expense, cancellationToken);
     }
 
