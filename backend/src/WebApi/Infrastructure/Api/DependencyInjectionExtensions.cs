@@ -1,4 +1,5 @@
 using Microsoft.EntityFrameworkCore;
+using WebApi.Common.Caching;
 using WebApi.Repositories;
 using WebApi.Repositories.Interfaces;
 using WebApi.Services;
@@ -16,13 +17,14 @@ internal static class DependencyInjectionExtensions
         services.AddScoped<IExpenseRepository, ExpenseRepository>();
         services.AddScoped<IAuditRepository, AuditRepository>();
         #endregion
-        
+
         #region Services
+        services.AddScoped<ICacheService, RedisCacheService>();
         services.AddScoped<IExpenseService, ExpenseService>();
         #endregion
-        
+
         services.AddEndpointsApiExplorer();
-       // services.AddSwaggerGen();
+        // services.AddSwaggerGen();
 
         return services;
     }
