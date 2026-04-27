@@ -399,7 +399,7 @@ public sealed class ExpenseServiceTests
         var existingExpense = new Expense
         {
             Id = id,
-            Description = "Old",
+            Description = "Old expense",
             Amount = 10m,
             Category = "Meals",
             Date = DateTime.UtcNow.AddDays(-1),
@@ -413,7 +413,7 @@ public sealed class ExpenseServiceTests
 
         var request = new CreateExpenseRequest
         {
-            Description = "New",
+            Description = "New expense",
             Amount = 20m,
             Category = "Travel",
             Date = DateTime.UtcNow
@@ -430,8 +430,8 @@ public sealed class ExpenseServiceTests
                     audit.EntityId == id.ToString() &&
                     audit.ChangesJson.Contains("OldValue") &&
                     audit.ChangesJson.Contains("NewValue") &&
-                    audit.ChangesJson.Contains("Old") &&
-                    audit.ChangesJson.Contains("New")),
+                    audit.ChangesJson.Contains("Old expense") &&
+                    audit.ChangesJson.Contains("New expense")),
                 It.IsAny<CancellationToken>()),
             Times.Once);
     }
