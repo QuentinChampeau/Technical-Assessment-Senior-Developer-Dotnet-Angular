@@ -25,7 +25,7 @@ public sealed class ExpenseServiceTests
             logger.Object);
 
     #region CreateAsync
-    [Fact]
+    [Fact(DisplayName = "CreateAsync should create expense, persist changes, create audit entry and invalidate expense list cache")]
     public async Task CreateAsync_ShouldCreateExpense_SaveChanges_CreateAudit_AndInvalidateListCache()
     {
         // Arrange
@@ -80,7 +80,7 @@ public sealed class ExpenseServiceTests
             Times.Once);
     }
 
-    [Fact]
+    [Fact(DisplayName = "CreateAsync should create a 'Created' audit entry with serialized expense payload")]
     public async Task CreateAsync_ShouldCreateAuditEntry_WithCreatedActionAndSerializedChanges()
     {
         var service = CreateService();
@@ -108,7 +108,7 @@ public sealed class ExpenseServiceTests
     #endregion
 
     #region GetByIdAsync
-    [Fact]
+    [Fact(DisplayName = "GetByIdAsync should return cached expense when cache entry exists")]
     public async Task GetByIdAsync_ShouldReturnCachedExpense_WhenCacheExists()
     {
         // Arrange
@@ -144,7 +144,7 @@ public sealed class ExpenseServiceTests
             Times.Never);
     }
 
-    [Fact]
+    [Fact(DisplayName = "GetByIdAsync should return null when expense does not exist in cache nor repository")]
     public async Task GetByIdAsync_ShouldReturnNull_WhenExpenseDoesNotExist()
     {
         // Arrange
@@ -171,7 +171,7 @@ public sealed class ExpenseServiceTests
     #endregion
 
     #region GetPagedAsync
-    [Fact]
+    [Fact(DisplayName = "GetPagedAsync should return cached paged result when cache entry exists")]
     public async Task GetPagedAsync_ShouldReturnCachedResult_WhenCacheExists()
     {
         var cachedResult = new PagedResponse<ExpenseResponse>
@@ -226,8 +226,7 @@ public sealed class ExpenseServiceTests
             Times.Never);
     }
 
-
-    [Fact]
+    [Fact(DisplayName = "GetPagedAsync should query repository and cache paged result when cache is empty")]
     public async Task GetPagedAsync_ShouldQueryRepository_AndCacheResult_WhenCacheIsEmpty()
     {
         var expenses = new List<Expense>
@@ -294,7 +293,7 @@ public sealed class ExpenseServiceTests
     #endregion
 
     #region UpdateAsync
-    [Fact]
+    [Fact(DisplayName = "UpdateAsync should update expense, create audit entry, persist changes and invalidate related caches")]
     public async Task UpdateAsync_ShouldUpdateExpense_CreateAudit_SaveChanges_AndInvalidateCaches()
     {
         // Arrange
@@ -361,7 +360,7 @@ public sealed class ExpenseServiceTests
             Times.Once);
     }
 
-    [Fact]
+    [Fact(DisplayName = "UpdateAsync should return null when expense to update does not exist")]
     public async Task UpdateAsync_ShouldReturnNull_WhenExpenseDoesNotExist()
     {
         // Arrange
@@ -392,8 +391,7 @@ public sealed class ExpenseServiceTests
             Times.Never);
     }
 
-
-    [Fact]
+    [Fact(DisplayName = "UpdateAsync should create an 'Updated' audit entry with old and new values")]
     public async Task UpdateAsync_ShouldCreateAuditEntry_WithOldAndNewValues()
     {
         var id = Guid.NewGuid();
@@ -440,7 +438,7 @@ public sealed class ExpenseServiceTests
     #endregion
 
     #region DeleteByIdAsync
-    [Fact]
+    [Fact(DisplayName = "DeleteByIdAsync should delete expense, create audit entry, persist changes and invalidate related caches")]
     public async Task DeleteByIdAsync_ShouldDeleteExpense_CreateAudit_SaveChanges_AndInvalidateCaches()
     {
         // Arrange
@@ -486,7 +484,7 @@ public sealed class ExpenseServiceTests
             Times.Once);
     }
 
-    [Fact]
+    [Fact(DisplayName = "DeleteByIdAsync should return false when expense to delete does not exist")]
     public async Task DeleteByIdAsync_ShouldReturnFalse_WhenExpenseDoesNotExist()
     {
         // Arrange
@@ -515,7 +513,7 @@ public sealed class ExpenseServiceTests
     #endregion
 
     #region GetHistoryAsync
-    [Fact]
+    [Fact(DisplayName = "GetHistoryAsync should return cached history when cache entry exists")]
     public async Task GetHistoryAsync_ShouldReturnCachedHistory_WhenCacheExists()
     {
         var id = Guid.NewGuid();
@@ -553,7 +551,7 @@ public sealed class ExpenseServiceTests
             Times.Never);
     }
 
-    [Fact]
+    [Fact(DisplayName = "GetHistoryAsync should query repository and cache history when cache is empty")]
     public async Task GetHistoryAsync_ShouldQueryRepository_AndCacheHistory_WhenCacheIsEmpty()
     {
         var id = Guid.NewGuid();
