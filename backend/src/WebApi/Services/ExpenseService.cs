@@ -1,7 +1,8 @@
+using System.Text.Json;
+using WebApi.Common.Caching;
 using WebApi.Common.Pagination;
 using WebApi.Contracts.Expenses;
 using WebApi.Domain.Entities;
-using WebApi.Common.Caching;
 using WebApi.Repositories;
 
 namespace WebApi.Services;
@@ -17,12 +18,21 @@ public sealed class ExpenseService(
     private const string ExpenseListCacheKeysSet = "expenses:list:keys";
 
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+
     private static string GetExpenseCacheKey(Guid id) => $"expenses:{id}";
+
     private static string GetExpenseHistoryCacheKey(Guid id) => $"expenses:{id}:history";
 
-    public async Task<ExpenseResponse> CreateAsync(CreateExpenseRequest request, CancellationToken cancellationToken)
+    public async Task<ExpenseResponse> CreateAsync(
+        CreateExpenseRequest request,
+        CancellationToken cancellationToken)
     {
         ValidateRequest(request);
+
+        logger.LogInformation(
+            "Creating expense. Category={Category}, Amount={Amount}.",
+            request.Category,
+            request.Amount);
 
         var now = DateTime.UtcNow;
 
@@ -44,7 +54,7 @@ public sealed class ExpenseService(
             EntityName = nameof(Expense),
             EntityId = expense.Id.ToString(),
             Action = "Created",
-            ChangesJson = System.Text.Json.JsonSerializer.Serialize(new
+            ChangesJson = JsonSerializer.Serialize(new
             {
                 expense.Id,
                 expense.Description,
@@ -62,7 +72,9 @@ public sealed class ExpenseService(
         await cacheService.RemoveAsync(GetExpenseHistoryCacheKey(expense.Id), cancellationToken);
         await cacheService.RemoveRegisteredKeysAsync(ExpenseListCacheKeysSet, cancellationToken);
 
-        logger.LogInformation("Expense {ExpenseId} created.", expense.Id);
+        logger.LogInformation(
+            "Expense {ExpenseId} created successfully and list cache invalidated.",
+            expense.Id);
 
         return MapToResponse(expense);
     }
@@ -79,7 +91,6 @@ public sealed class ExpenseService(
         page = page <= 0 ? 1 : page;
         pageSize = pageSize <= 0 ? 10 : Math.Min(pageSize, 100);
 
-        // Normalization
         category = string.IsNullOrWhiteSpace(category) ? null : category.Trim();
         search = string.IsNullOrWhiteSpace(search) ? null : search.Trim();
         sortBy = string.IsNullOrWhiteSpace(sortBy) ? "date" : sortBy.Trim().ToLowerInvariant();
@@ -87,8 +98,17 @@ public sealed class ExpenseService(
             ? "asc"
             : "desc";
 
+        logger.LogInformation(
+            "Retrieving expenses. Page={Page}, PageSize={PageSize}, Category={Category}, Search={Search}, SortBy={SortBy}, SortDirection={SortDirection}.",
+            page,
+            pageSize,
+            category,
+            search,
+            sortBy,
+            sortDirection);
+
         var cacheKey =
-    $"expenses:list:page={page}:pageSize={pageSize}:category={category}:search={search}:sortBy={sortBy}:sortDirection={sortDirection}";
+            $"expenses:list:page={page}:pageSize={pageSize}:category={category}:search={search}:sortBy={sortBy}:sortDirection={sortDirection}";
 
         var cachedResult = await cacheService.GetAsync<PagedResponse<ExpenseResponse>>(
             cacheKey,
@@ -96,8 +116,11 @@ public sealed class ExpenseService(
 
         if (cachedResult is not null)
         {
+            logger.LogInformation("Expense list cache hit. CacheKey={CacheKey}.", cacheKey);
             return cachedResult;
         }
+
+        logger.LogInformation("Expense list cache miss. CacheKey={CacheKey}. Querying repository.", cacheKey);
 
         var (items, totalCount) = await expenseRepository.GetPagedAsync(
             page,
@@ -122,11 +145,21 @@ public sealed class ExpenseService(
         await cacheService.SetAsync(cacheKey, result, CacheDuration, cancellationToken);
         await cacheService.RegisterKeyAsync(ExpenseListCacheKeysSet, cacheKey, cancellationToken);
 
+        logger.LogInformation(
+            "Expense list retrieved and cached. CacheKey={CacheKey}, TotalCount={TotalCount}, ReturnedCount={ReturnedCount}.",
+            cacheKey,
+            totalCount,
+            mappedItems.Count);
+
         return result;
     }
 
-    public async Task<ExpenseResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<ExpenseResponse?> GetByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken)
     {
+        logger.LogInformation("Retrieving expense {ExpenseId}.", id);
+
         var cacheKey = GetExpenseCacheKey(id);
 
         var cachedExpense = await cacheService.GetAsync<ExpenseResponse>(
@@ -135,13 +168,17 @@ public sealed class ExpenseService(
 
         if (cachedExpense is not null)
         {
+            logger.LogInformation("Expense {ExpenseId} cache hit.", id);
             return cachedExpense;
         }
+
+        logger.LogInformation("Expense {ExpenseId} cache miss. Querying repository.", id);
 
         var expense = await expenseRepository.GetByIdAsync(id, cancellationToken);
 
         if (expense is null)
         {
+            logger.LogWarning("Expense {ExpenseId} was not found.", id);
             return null;
         }
 
@@ -149,20 +186,25 @@ public sealed class ExpenseService(
 
         await cacheService.SetAsync(cacheKey, response, CacheDuration, cancellationToken);
 
+        logger.LogInformation("Expense {ExpenseId} retrieved and cached.", id);
+
         return response;
     }
 
     public async Task<ExpenseResponse?> UpdateAsync(
-    Guid id,
-    CreateExpenseRequest request,
-    CancellationToken cancellationToken)
+        Guid id,
+        CreateExpenseRequest request,
+        CancellationToken cancellationToken)
     {
         ValidateRequest(request);
+
+        logger.LogInformation("Updating expense {ExpenseId}.", id);
 
         var expense = await expenseRepository.GetByIdAsync(id, cancellationToken);
 
         if (expense is null)
         {
+            logger.LogWarning("Expense {ExpenseId} could not be updated because it was not found.", id);
             return null;
         }
 
@@ -195,7 +237,7 @@ public sealed class ExpenseService(
             EntityName = nameof(Expense),
             EntityId = expense.Id.ToString(),
             Action = "Updated",
-            ChangesJson = System.Text.Json.JsonSerializer.Serialize(new
+            ChangesJson = JsonSerializer.Serialize(new
             {
                 OldValue = oldValues,
                 NewValue = newValues
@@ -209,29 +251,35 @@ public sealed class ExpenseService(
         await cacheService.RemoveAsync(GetExpenseHistoryCacheKey(expense.Id), cancellationToken);
         await cacheService.RemoveRegisteredKeysAsync(ExpenseListCacheKeysSet, cancellationToken);
 
-        logger.LogInformation("Expense {ExpenseId} updated.", expense.Id);
+        logger.LogInformation(
+            "Expense {ExpenseId} updated successfully. Detail, history and list caches invalidated.",
+            expense.Id);
 
         return MapToResponse(expense);
     }
 
-    public async Task<bool> DeleteByIdAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<bool> DeleteByIdAsync(
+        Guid id,
+        CancellationToken cancellationToken)
     {
+        logger.LogInformation("Deleting expense {ExpenseId}.", id);
+
         var expense = await expenseRepository.GetByIdAsync(id, cancellationToken);
 
         if (expense is null)
         {
+            logger.LogWarning("Expense {ExpenseId} could not be deleted because it was not found.", id);
             return false;
         }
 
         var now = DateTime.UtcNow;
-
 
         await auditRepository.AddAsync(new AuditEntry
         {
             EntityName = nameof(Expense),
             EntityId = expense.Id.ToString(),
             Action = "Deleted",
-            ChangesJson = System.Text.Json.JsonSerializer.Serialize(new
+            ChangesJson = JsonSerializer.Serialize(new
             {
                 expense.Id,
                 expense.Description,
@@ -251,13 +299,19 @@ public sealed class ExpenseService(
         await cacheService.RemoveAsync(GetExpenseHistoryCacheKey(expense.Id), cancellationToken);
         await cacheService.RemoveRegisteredKeysAsync(ExpenseListCacheKeysSet, cancellationToken);
 
+        logger.LogInformation(
+            "Expense {ExpenseId} deleted successfully. Detail, history and list caches invalidated.",
+            expense.Id);
+
         return true;
     }
 
     public async Task<IReadOnlyCollection<AuditEntryResponse>> GetHistoryAsync(
-    Guid id,
-    CancellationToken cancellationToken)
+        Guid id,
+        CancellationToken cancellationToken)
     {
+        logger.LogInformation("Retrieving audit history for expense {ExpenseId}.", id);
+
         var cacheKey = GetExpenseHistoryCacheKey(id);
 
         var cachedHistory = await cacheService.GetAsync<IReadOnlyCollection<AuditEntryResponse>>(
@@ -266,8 +320,11 @@ public sealed class ExpenseService(
 
         if (cachedHistory is not null)
         {
+            logger.LogInformation("Audit history cache hit for expense {ExpenseId}.", id);
             return cachedHistory;
         }
+
+        logger.LogInformation("Audit history cache miss for expense {ExpenseId}. Querying repository.", id);
 
         var history = await auditRepository.GetEntityHistoryAsync(
             nameof(Expense),
@@ -285,6 +342,11 @@ public sealed class ExpenseService(
         }).ToList();
 
         await cacheService.SetAsync(cacheKey, result, CacheDuration, cancellationToken);
+
+        logger.LogInformation(
+            "Audit history retrieved and cached for expense {ExpenseId}. EntryCount={EntryCount}.",
+            id,
+            result.Count);
 
         return result;
     }
@@ -308,12 +370,14 @@ public sealed class ExpenseService(
             throw new ArgumentException("Description is required.", nameof(request));
         }
 
-        if (request.Description.Trim().Length < 5)
+        var description = request.Description.Trim();
+
+        if (description.Length < 5)
         {
             throw new ArgumentException("Description must contain at least 5 characters.", nameof(request));
         }
 
-        if (request.Description.Trim().Length > 200)
+        if (description.Length > 200)
         {
             throw new ArgumentException("Description cannot exceed 200 characters.", nameof(request));
         }
@@ -328,7 +392,9 @@ public sealed class ExpenseService(
             throw new ArgumentException("Category is required.", nameof(request));
         }
 
-        if (request.Category.Trim().Length > 100)
+        var category = request.Category.Trim();
+
+        if (category.Length > 100)
         {
             throw new ArgumentException("Category cannot exceed 100 characters.", nameof(request));
         }
