@@ -37,6 +37,7 @@ application that provides an intuitive user interface for expense management.
 - **Redis** for cache access
 - **PostgreSQL** and **Entity FrameworkCore** for data persistence
 - **C# 14.0** features where applicable
+- **xUnit, Moq, FluentAssertions** testing
 
 #### Frontend
 
@@ -44,6 +45,8 @@ application that provides an intuitive user interface for expense management.
 - **TypeScript**
 - **RxJS** for reactive programming
 - **Tailwindcss**
+- **Chart.js** for charts handling
+- **Jasmine/Karma** for testing
 
 ### API Endpoints to Implement
 
@@ -162,20 +165,20 @@ Your implementation must include:
 ### Backend
 
 - [x] All three endpoints are functional and tested
-- [ ] Proper input validation and error handling
-- [ ] Redis integration working correctly
-- [ ] Clean, readable, and maintainable code
+- [X] Proper input validation and error handling
+- [X] Redis integration working correctly
+- [X] Clean, readable, and maintainable code
 - [x] Appropriate use of HTTP status codes
-- [ ] Basic logging implementation
+- [X] Basic logging implementation
 
 ### Frontend
 
 - [x] Responsive UI that works on mobile and desktop
 - [x] Implementation of all required features (dashboard, expense creation, viewing)
 - [x] Proper integration with backend API endpoints
-- [ ] Clean, readable, and maintainable code
-- [ ] Proper form validation and error handling
-- [ ] Consistent styling and user experience
+- [X] Clean, readable, and maintainable code
+- [X] Proper form validation and error handling
+- [X] Consistent styling and user experience
 
 ## Submission Guidelines
 
