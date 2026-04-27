@@ -22,6 +22,8 @@ public sealed class ExpenseService(
 
     public async Task<ExpenseResponse> CreateAsync(CreateExpenseRequest request, CancellationToken cancellationToken)
     {
+        ValidateRequest(request);
+
         var now = DateTime.UtcNow;
 
         var expense = new Expense
@@ -155,6 +157,8 @@ public sealed class ExpenseService(
     CreateExpenseRequest request,
     CancellationToken cancellationToken)
     {
+        ValidateRequest(request);
+
         var expense = await expenseRepository.GetByIdAsync(id, cancellationToken);
 
         if (expense is null)
@@ -296,4 +300,37 @@ public sealed class ExpenseService(
             CreatedAtUtc = expense.CreatedAtUtc,
             UpdatedAtUtc = expense.UpdatedAtUtc
         };
+
+    private static void ValidateRequest(CreateExpenseRequest request)
+    {
+        if (string.IsNullOrWhiteSpace(request.Description))
+        {
+            throw new ArgumentException("Description is required.", nameof(request));
+        }
+
+        if (request.Description.Trim().Length < 5)
+        {
+            throw new ArgumentException("Description must contain at least 5 characters.", nameof(request));
+        }
+
+        if (request.Description.Trim().Length > 200)
+        {
+            throw new ArgumentException("Description cannot exceed 200 characters.", nameof(request));
+        }
+
+        if (request.Amount <= 0)
+        {
+            throw new ArgumentException("Amount must be greater than zero.", nameof(request));
+        }
+
+        if (string.IsNullOrWhiteSpace(request.Category))
+        {
+            throw new ArgumentException("Category is required.", nameof(request));
+        }
+
+        if (request.Category.Trim().Length > 100)
+        {
+            throw new ArgumentException("Category cannot exceed 100 characters.", nameof(request));
+        }
+    }
 }
