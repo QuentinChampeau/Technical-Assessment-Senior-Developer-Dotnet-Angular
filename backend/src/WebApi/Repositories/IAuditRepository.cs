@@ -1,6 +1,6 @@
 using WebApi.Domain.Entities;
 
-namespace WebApi.Repositories.Interfaces;
+namespace WebApi.Repositories;
 
 public interface IAuditRepository
 {

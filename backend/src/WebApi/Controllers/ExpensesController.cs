@@ -1,7 +1,7 @@
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Common.Pagination;
 using WebApi.Contracts.Expenses;
-using WebApi.Services.Interfaces;
+using WebApi.Services;
 
 namespace WebApi.Controllers;
 
