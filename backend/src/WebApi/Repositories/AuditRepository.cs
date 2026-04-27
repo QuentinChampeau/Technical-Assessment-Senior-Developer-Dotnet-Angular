@@ -7,6 +7,11 @@ namespace WebApi.Repositories;
 
 public sealed class AuditRepository(AppDbContext dbContext) : IAuditRepository
 {
+    public async Task AddAsync(AuditEntry auditEntry, CancellationToken cancellationToken)
+    {
+        await dbContext.AuditEntries.AddAsync(auditEntry, cancellationToken);
+    }
+
     public async Task<IReadOnlyCollection<AuditEntry>> GetEntityHistoryAsync(
         string entityName,
         string entityId,

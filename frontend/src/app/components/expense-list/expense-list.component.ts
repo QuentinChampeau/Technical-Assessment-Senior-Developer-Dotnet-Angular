@@ -1,8 +1,8 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { RouterLink } from '@angular/router';
-import { ExpenseService } from '../../services/expense.service';
-import { Expense } from '../../models/expense.model';
+import { ExpenseService } from '@services/expense.service';
+import { Expense } from '@models/expense.model';
 import { ExpenseListTableComponent } from './tables/expense-list-table.component';
 import { FormsModule } from '@angular/forms';
 import { ExpenseDashboardChartsComponent } from './charts/expense-dashboard-charts.component';

@@ -13,16 +13,39 @@ public sealed class ExpenseService(
 {
     public async Task<ExpenseResponse> CreateAsync(CreateExpenseRequest request, CancellationToken cancellationToken)
     {
+        var now = DateTime.UtcNow;
+
         var expense = new Expense
         {
             Id = Guid.NewGuid(),
             Description = request.Description.Trim(),
             Amount = request.Amount,
             Category = request.Category.Trim(),
-            Date = request.Date
+            Date = request.Date,
+            CreatedAtUtc = now,
+            UpdatedAtUtc = now
         };
 
         await expenseRepository.AddAsync(expense, cancellationToken);
+
+        await auditRepository.AddAsync(new AuditEntry
+        {
+            EntityName = nameof(Expense),
+            EntityId = expense.Id.ToString(),
+            Action = "Created",
+            ChangesJson = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                expense.Id,
+                expense.Description,
+                expense.Amount,
+                expense.Category,
+                expense.Date,
+                expense.CreatedAtUtc,
+                expense.UpdatedAtUtc
+            }),
+            CreatedAtUtc = now
+        }, cancellationToken);
+
         await expenseRepository.SaveChangesAsync(cancellationToken);
 
         logger.LogInformation("Expense {ExpenseId} created.", expense.Id);
@@ -84,6 +107,24 @@ public sealed class ExpenseService(
         {
             return false;
         }
+
+        await auditRepository.AddAsync(new AuditEntry
+        {
+            EntityName = nameof(Expense),
+            EntityId = expense.Id.ToString(),
+            Action = "Deleted",
+            ChangesJson = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                expense.Id,
+                expense.Description,
+                expense.Amount,
+                expense.Category,
+                expense.Date,
+                expense.CreatedAtUtc,
+                expense.UpdatedAtUtc
+            }),
+            CreatedAtUtc = DateTime.UtcNow
+        }, cancellationToken);
 
         expenseRepository.Delete(expense);
         await expenseRepository.SaveChangesAsync(cancellationToken);

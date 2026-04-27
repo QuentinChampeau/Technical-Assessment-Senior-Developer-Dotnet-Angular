@@ -2,8 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, input, output } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { RouterLink } from '@angular/router';
-import { PaginationComponent } from '../../../common/components/pagination/pagination.component';
-import { Expense } from '../../../models/expense.model';
+import { PaginationComponent } from '@common/components/pagination/pagination.component';
+import { Expense } from '@models/expense.model';
 
 @Component({
   selector: 'app-expense-list-table',

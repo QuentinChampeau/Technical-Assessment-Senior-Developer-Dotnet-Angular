@@ -9,7 +9,7 @@ import {
 } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import Chart from 'chart.js/auto';
-import { Expense } from '../../../models/expense.model';
+import { Expense } from '@models/expense.model';
 
 @Component({
   selector: 'app-expense-dashboard-charts',
