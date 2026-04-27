@@ -7,7 +7,7 @@ import {
   Validators,
 } from '@angular/forms';
 import { ActivatedRoute, Router, RouterLink } from '@angular/router';
-import { ExpenseService } from '../../services/expense.service';
+import { ExpenseService } from '@services/expense.service';
 
 @Component({
   selector: 'app-expense-form',
