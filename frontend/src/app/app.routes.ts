@@ -8,5 +8,9 @@ export const routes: Routes = [
   { path: 'expenses', component: ExpenseListComponent },
   { path: 'expenses/new', component: ExpenseFormComponent },
   { path: 'expenses/:id', component: ExpenseDetailComponent },
-  { path: '**', redirectTo: 'expenses' }
+  {
+    path: 'expenses/:id/edit',
+    component: ExpenseFormComponent,
+  },
+  { path: '**', redirectTo: 'expenses' },
 ];

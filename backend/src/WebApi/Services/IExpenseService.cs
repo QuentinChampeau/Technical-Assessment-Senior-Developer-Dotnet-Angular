@@ -15,6 +15,10 @@ public interface IExpenseService
         string? sortDirection,
         CancellationToken cancellationToken);
     Task<ExpenseResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken);
+    Task<ExpenseResponse?> UpdateAsync(
+        Guid id,
+        CreateExpenseRequest request,
+        CancellationToken cancellationToken);
     Task<bool> DeleteByIdAsync(Guid id, CancellationToken cancellationToken);
     Task<IReadOnlyCollection<AuditEntryResponse>> GetHistoryAsync(Guid id, CancellationToken cancellationToken);
 }

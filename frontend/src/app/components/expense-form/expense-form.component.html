@@ -22,7 +22,9 @@
 
   <div class="bg-white shadow-lg rounded-lg overflow-hidden">
     <div class="px-6 py-4 border-b border-gray-200 bg-gray-50">
-      <h1 class="text-2xl font-bold text-gray-800">Create New Expense</h1>
+      <h1 class="text-2xl font-bold text-gray-800">
+        {{ isEditMode ? "Edit Expense" : "Create New Expense" }}
+      </h1>
     </div>
 
     <div class="p-6">
@@ -64,25 +66,6 @@
               <div *ngIf="expenseForm.get('amount')?.errors?.['min']">
                 Amount must be greater than 0
               </div>
-            </div>
-          </div>
-
-          <div>
-            <label
-              for="currency"
-              class="block text-sm font-medium text-gray-700"
-              >Currency *</label
-            >
-            <div class="mt-1">
-              <select
-                id="currency"
-                formControlName="currency"
-                class="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 sm:text-sm"
-              >
-                <option *ngFor="let currency of currencies" [value]="currency">
-                  {{ currency }}
-                </option>
-              </select>
             </div>
           </div>
         </div>

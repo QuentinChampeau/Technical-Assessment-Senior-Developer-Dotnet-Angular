@@ -69,6 +69,25 @@ public sealed class ExpensesController(IExpenseService expenseService) : Control
         return Ok(expense);
     }
 
+    [HttpPut("{id:guid}")]
+    [ProducesResponseType(typeof(ExpenseResponse), StatusCodes.Status200OK)]
+    [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
+    [ProducesResponseType(StatusCodes.Status404NotFound)]
+    public async Task<ActionResult<ExpenseResponse>> UpdateExpense(
+    Guid id,
+    [FromBody] CreateExpenseRequest request,
+    CancellationToken cancellationToken)
+    {
+        var updatedExpense = await expenseService.UpdateAsync(id, request, cancellationToken);
+
+        if (updatedExpense is null)
+        {
+            return NotFound();
+        }
+
+        return Ok(updatedExpense);
+    }
+
     [HttpDelete("{id:guid}")]
     [ProducesResponseType(StatusCodes.Status204NoContent)]
     [ProducesResponseType(StatusCodes.Status404NotFound)]

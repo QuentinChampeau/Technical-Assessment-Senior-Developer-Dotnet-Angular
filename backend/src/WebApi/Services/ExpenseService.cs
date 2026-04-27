@@ -99,6 +99,60 @@ public sealed class ExpenseService(
         return response;
     }
 
+    public async Task<ExpenseResponse?> UpdateAsync(
+    Guid id,
+    CreateExpenseRequest request,
+    CancellationToken cancellationToken)
+    {
+        var expense = await expenseRepository.GetByIdAsync(id, cancellationToken);
+
+        if (expense is null)
+        {
+            return null;
+        }
+
+        var oldValues = new
+        {
+            expense.Description,
+            expense.Amount,
+            expense.Category,
+            expense.Date
+        };
+
+        expense.Description = request.Description.Trim();
+        expense.Amount = request.Amount;
+        expense.Category = request.Category.Trim();
+        expense.Date = request.Date;
+        expense.UpdatedAtUtc = DateTime.UtcNow;
+
+        var newValues = new
+        {
+            expense.Description,
+            expense.Amount,
+            expense.Category,
+            expense.Date
+        };
+
+        await auditRepository.AddAsync(new AuditEntry
+        {
+            EntityName = nameof(Expense),
+            EntityId = expense.Id.ToString(),
+            Action = "Updated",
+            ChangesJson = System.Text.Json.JsonSerializer.Serialize(new
+            {
+                OldValue = oldValues,
+                NewValue = newValues
+            }),
+            CreatedAtUtc = DateTime.UtcNow
+        }, cancellationToken);
+
+        await expenseRepository.SaveChangesAsync(cancellationToken);
+
+        logger.LogInformation("Expense {ExpenseId} updated.", expense.Id);
+
+        return MapToResponse(expense);
+    }
+
     public async Task<bool> DeleteByIdAsync(Guid id, CancellationToken cancellationToken)
     {
         var expense = await expenseRepository.GetByIdAsync(id, cancellationToken);
