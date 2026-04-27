@@ -1,9 +1,8 @@
 using WebApi.Common.Pagination;
 using WebApi.Contracts.Expenses;
 using WebApi.Domain.Entities;
-using WebApi.Repositories.Interfaces;
-using WebApi.Services.Interfaces;
 using WebApi.Common.Caching;
+using WebApi.Repositories;
 
 namespace WebApi.Services;
 
@@ -13,9 +12,13 @@ public sealed class ExpenseService(
     ICacheService cacheService,
     ILogger<ExpenseService> logger) : IExpenseService
 {
-
+    // Tracks all paginated list cache keys so they can be invalidated
+    // efficiently after write operations.
     private const string ExpenseListCacheKeysSet = "expenses:list:keys";
+
     private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+    private static string GetExpenseCacheKey(Guid id) => $"expenses:{id}";
+    private static string GetExpenseHistoryCacheKey(Guid id) => $"expenses:{id}:history";
 
     public async Task<ExpenseResponse> CreateAsync(CreateExpenseRequest request, CancellationToken cancellationToken)
     {
@@ -54,6 +57,7 @@ public sealed class ExpenseService(
 
         await expenseRepository.SaveChangesAsync(cancellationToken);
 
+        await cacheService.RemoveAsync(GetExpenseHistoryCacheKey(expense.Id), cancellationToken);
         await cacheService.RemoveRegisteredKeysAsync(ExpenseListCacheKeysSet, cancellationToken);
 
         logger.LogInformation("Expense {ExpenseId} created.", expense.Id);
@@ -121,7 +125,7 @@ public sealed class ExpenseService(
 
     public async Task<ExpenseResponse?> GetByIdAsync(Guid id, CancellationToken cancellationToken)
     {
-        var cacheKey = $"expenses:{id}";
+        var cacheKey = GetExpenseCacheKey(id);
 
         var cachedExpense = await cacheService.GetAsync<ExpenseResponse>(
             cacheKey,
@@ -197,7 +201,8 @@ public sealed class ExpenseService(
 
         await expenseRepository.SaveChangesAsync(cancellationToken);
 
-        await cacheService.RemoveAsync($"expenses:{expense.Id}", cancellationToken);
+        await cacheService.RemoveAsync(GetExpenseCacheKey(expense.Id), cancellationToken);
+        await cacheService.RemoveAsync(GetExpenseHistoryCacheKey(expense.Id), cancellationToken);
         await cacheService.RemoveRegisteredKeysAsync(ExpenseListCacheKeysSet, cancellationToken);
 
         logger.LogInformation("Expense {ExpenseId} updated.", expense.Id);
@@ -214,6 +219,9 @@ public sealed class ExpenseService(
             return false;
         }
 
+        var now = DateTime.UtcNow;
+
+
         await auditRepository.AddAsync(new AuditEntry
         {
             EntityName = nameof(Expense),
@@ -229,26 +237,40 @@ public sealed class ExpenseService(
                 expense.CreatedAtUtc,
                 expense.UpdatedAtUtc
             }),
-            CreatedAtUtc = DateTime.UtcNow
+            CreatedAtUtc = now
         }, cancellationToken);
 
         expenseRepository.Delete(expense);
         await expenseRepository.SaveChangesAsync(cancellationToken);
 
-        await cacheService.RemoveAsync($"expenses:{expense.Id}", cancellationToken);
+        await cacheService.RemoveAsync(GetExpenseCacheKey(expense.Id), cancellationToken);
+        await cacheService.RemoveAsync(GetExpenseHistoryCacheKey(expense.Id), cancellationToken);
         await cacheService.RemoveRegisteredKeysAsync(ExpenseListCacheKeysSet, cancellationToken);
 
         return true;
     }
 
-    public async Task<IReadOnlyCollection<AuditEntryResponse>> GetHistoryAsync(Guid id, CancellationToken cancellationToken)
+    public async Task<IReadOnlyCollection<AuditEntryResponse>> GetHistoryAsync(
+    Guid id,
+    CancellationToken cancellationToken)
     {
+        var cacheKey = GetExpenseHistoryCacheKey(id);
+
+        var cachedHistory = await cacheService.GetAsync<IReadOnlyCollection<AuditEntryResponse>>(
+            cacheKey,
+            cancellationToken);
+
+        if (cachedHistory is not null)
+        {
+            return cachedHistory;
+        }
+
         var history = await auditRepository.GetEntityHistoryAsync(
             nameof(Expense),
             id.ToString(),
             cancellationToken);
 
-        return history.Select(x => new AuditEntryResponse
+        var result = history.Select(x => new AuditEntryResponse
         {
             Id = x.Id,
             EntityName = x.EntityName,
@@ -257,6 +279,10 @@ public sealed class ExpenseService(
             ChangesJson = x.ChangesJson,
             CreatedAtUtc = x.CreatedAtUtc
         }).ToList();
+
+        await cacheService.SetAsync(cacheKey, result, CacheDuration, cancellationToken);
+
+        return result;
     }
 
     private static ExpenseResponse MapToResponse(Expense expense) =>

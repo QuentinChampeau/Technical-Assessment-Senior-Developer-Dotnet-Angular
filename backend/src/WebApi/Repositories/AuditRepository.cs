@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WebApi.Domain.Entities;
 using WebApi.Infrastructure.Persistence;
-using WebApi.Repositories.Interfaces;
 
 namespace WebApi.Repositories;
 

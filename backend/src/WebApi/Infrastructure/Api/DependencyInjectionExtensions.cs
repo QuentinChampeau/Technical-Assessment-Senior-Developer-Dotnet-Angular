@@ -1,9 +1,7 @@
 using Microsoft.EntityFrameworkCore;
 using WebApi.Common.Caching;
 using WebApi.Repositories;
-using WebApi.Repositories.Interfaces;
 using WebApi.Services;
-using WebApi.Services.Interfaces;
 
 namespace WebApi.Infrastructure.Api;
 

@@ -1,7 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WebApi.Domain.Entities;
 using WebApi.Infrastructure.Persistence;
-using WebApi.Repositories.Interfaces;
 
 namespace WebApi.Repositories;
 
@@ -75,8 +74,8 @@ public sealed class ExpenseRepository(AppDbContext dbContext) : IExpenseReposito
         return (items, totalCount);
     }
 
-    public async Task SaveChangesAsync(CancellationToken cancellationToken)
+    public async Task<int> SaveChangesAsync(CancellationToken cancellationToken)
     {
-        await dbContext.SaveChangesAsync(cancellationToken);
+        return await dbContext.SaveChangesAsync(cancellationToken);
     }
 }
