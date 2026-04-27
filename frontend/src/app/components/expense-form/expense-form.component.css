@@ -1,6 +1,8 @@
 /* Additional custom styles can be added here if needed */
 
 /* Fix for input styling with Tailwind */
-input, select, textarea {
+input,
+select,
+textarea {
   @apply border-gray-300 rounded-md;
 }
