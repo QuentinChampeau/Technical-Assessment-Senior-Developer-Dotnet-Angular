@@ -1,6 +1,5 @@
 @WebApi_HostAddress = http://localhost:5195
-@CompanyId = ""
-@EmployeeId = ""
+@ExpenseId = ""
 
 ### Get user info
 GET {{WebApi_HostAddress}}/users/me
@@ -24,115 +23,285 @@ Accept: application/json
     });
 %}
 
-### Add a new expense
+### Create a Meals expense (captures ExpenseId for subsequent requests)
 
-POST {{WebApi_HostAddress}}/expense/
+POST {{WebApi_HostAddress}}/expenses
 Content-Type: application/json
 
 {
-    "company_id": "{{CompanyId}}",
-    "amount": 42.24,
-    "currency": "USD",
-    "category": "Office Supplies",
-    "date": "2025-07-08T12:46:24.009Z",
-    "description": "This is an expense of 42.24 dollars",
-    "employee_id": "{{EmployeeId}}"
-}
-
-> {%
-    client.test("Add a new expense - Status code is 201", function () {
-        client.assert(response.status === 201, "Response status is not 201");
-    });
-
-    client.test("Add a new expense - Response has location header", function () {
-        const locationHeader = response.headers.valueOf("Location");
-        client.assert(locationHeader != null, "Location header is not present in response");
-        client.assert(locationHeader.length > 0, "Location header is empty");
-        client.assert(locationHeader.startsWith("/expenses/"), "Location header does not start with /expenses/");
-
-
-        const expenseId = locationHeader.split('/').pop();
-        client.assert(expenseId != null && expenseId.length > 0, "Expense ID is not present");
-    });
-%}
-
-### Add a new expense
-
-POST {{WebApi_HostAddress}}/expense/
-Content-Type: application/json
-
-{
-    "company_id": "{{CompanyId}}",
-    "amount": 7.32,
-    "currency": "EUR",
+    "description": "Team lunch at the office",
+    "amount": 42.50,
     "category": "Meals",
-    "date": "2025-06-08T12:46:24.009Z",
-    "description": "This is an expense of 7.32 euro",
-    "employee_id": "{{EmployeeId}}"
+    "date": "2026-04-01T12:00:00.000Z"
 }
 
 > {%
-    client.test("Add a new expense - Status code is 201", function () {
-        client.assert(response.status === 201, "Response status is not 201");
+    client.test("POST /expenses - Status code is 201 Created", function () {
+        client.assert(response.status === 201, "Expected 201 Created");
     });
 
-    client.test("Add a new expense - Response has location header", function () {
-        const locationHeader = response.headers.valueOf("Location");
-        client.assert(locationHeader != null, "Location header is not present in response");
-        client.assert(locationHeader.length > 0, "Location header is empty");
-        client.assert(locationHeader.startsWith("/expenses/"), "Location header does not start with /expenses/");
+    client.test("POST /expenses - Response body contains a valid expense", function () {
+        const body = response.body;
+        client.assert(body.id != null && body.id.length > 0, "id is missing");
+        client.assert(body.description === "Team lunch at the office", "description mismatch");
+        client.assert(body.amount === 42.50, "amount mismatch");
+        client.assert(body.category === "Meals", "category mismatch");
+        client.assert(body.createdAtUtc != null, "createdAtUtc is missing");
+        client.assert(body.updatedAtUtc != null, "updatedAtUtc is missing");
+        client.global.set("ExpenseId", body.id);
+    });
 
-
-        const expenseId = locationHeader.split('/').pop();
-        client.assert(expenseId != null && expenseId.length > 0, "Expense ID is not present");
+    client.test("POST /expenses - Location header points to the created resource", function () {
+        const location = response.headers.valueOf("Location");
+        client.assert(location != null && location.length > 0, "Location header is missing");
+        client.assert(location.includes("/expenses/"), "Location header does not reference /expenses/");
     });
 %}
 
-### Add a new expense
+### Create a Travel expense
 
-POST {{WebApi_HostAddress}}/expense/
+POST {{WebApi_HostAddress}}/expenses
 Content-Type: application/json
 
 {
-    "company_id": "{{CompanyId}}",
-    "amount": 100,
-    "currency": "EUR",
+    "description": "Train ticket to Paris",
+    "amount": 89.00,
     "category": "Travel",
-    "date": "2025-05-08T12:46:24.009Z",
-    "description": "This is an expense of 100 euro",
-    "employee_id": "{{EmployeeId}}"
+    "date": "2026-04-10T08:30:00.000Z"
 }
 
 > {%
-    client.test("Add a new expense - Status code is 201", function () {
-        client.assert(response.status === 201, "Response status is not 201");
-    });
-
-    client.test("Add a new expense - Response has location header", function () {
-        const locationHeader = response.headers.valueOf("Location");
-        client.assert(locationHeader != null, "Location header is not present in response");
-        client.assert(locationHeader.length > 0, "Location header is empty");
-        client.assert(locationHeader.startsWith("/expenses/"), "Location header does not start with /expenses/");
-
-
-        const expenseId = locationHeader.split('/').pop();
-        client.assert(expenseId != null && expenseId.length > 0, "Expense ID is not present");
+    client.test("POST /expenses (Travel) - Status code is 201 Created", function () {
+        client.assert(response.status === 201, "Expected 201 Created");
     });
 %}
 
-### Get all expenses
+### Create a Software expense
 
-GET {{WebApi_HostAddress}}/expense/
+POST {{WebApi_HostAddress}}/expenses
+Content-Type: application/json
+
+{
+    "description": "Annual IDE subscription",
+    "amount": 249.99,
+    "category": "Software",
+    "date": "2026-04-15T09:00:00.000Z"
+}
+
+> {%
+    client.test("POST /expenses (Software) - Status code is 201 Created", function () {
+        client.assert(response.status === 201, "Expected 201 Created");
+    });
+%}
+
+### Create an expense with invalid data - should return 400
+
+POST {{WebApi_HostAddress}}/expenses
+Content-Type: application/json
+
+{
+    "description": "",
+    "amount": 0,
+    "category": "",
+    "date": "2026-04-01T00:00:00.000Z"
+}
+
+> {%
+    client.test("POST /expenses (invalid) - Status code is 400 Bad Request", function () {
+        client.assert(response.status === 400, "Expected 400 Bad Request");
+    });
+
+    client.test("POST /expenses (invalid) - Response contains validation errors", function () {
+        client.assert(response.body.errors != null, "Expected errors in response body");
+    });
+%}
+
+### Get all expenses - first page with default sorting
+
+GET {{WebApi_HostAddress}}/expenses?page=1&pageSize=10
 Accept: application/json
 
 > {%
-    client.test("Get all expenses - Status code is 200", function () {
-        client.assert(response.status === 200, "Response status is not 200");
+    client.test("GET /expenses - Status code is 200 OK", function () {
+        client.assert(response.status === 200, "Expected 200 OK");
     });
 
-    client.test("Get all expenses - Contains 3 expenses", function () {
-        client.assert(Array.isArray(response.body), "Response body is not an array");
-        client.assert(response.body.length === 3, "Response does not contain exactly 3 expenses");
+    client.test("GET /expenses - Response is a valid paged result", function () {
+        const body = response.body;
+        client.assert(Array.isArray(body.items), "items should be an array");
+        client.assert(body.items.length > 0, "items should not be empty");
+        client.assert(typeof body.totalCount === "number", "totalCount should be a number");
+        client.assert(typeof body.totalPages === "number", "totalPages should be a number");
+        client.assert(body.page === 1, "page should be 1");
+        client.assert(body.pageSize === 10, "pageSize should be 10");
     });
 %}
 
+### Get expenses filtered by category
+
+GET {{WebApi_HostAddress}}/expenses?page=1&pageSize=10&category=Meals
+Accept: application/json
+
+> {%
+    client.test("GET /expenses?category=Meals - Status code is 200 OK", function () {
+        client.assert(response.status === 200, "Expected 200 OK");
+    });
+
+    client.test("GET /expenses?category=Meals - All returned expenses belong to Meals", function () {
+        response.body.items.forEach(function (item) {
+            client.assert(item.category === "Meals", "Expected category Meals, got: " + item.category);
+        });
+    });
+%}
+
+### Get expenses filtered by search keyword
+
+GET {{WebApi_HostAddress}}/expenses?page=1&pageSize=10&search=lunch
+Accept: application/json
+
+> {%
+    client.test("GET /expenses?search=lunch - Status code is 200 OK", function () {
+        client.assert(response.status === 200, "Expected 200 OK");
+    });
+
+    client.test("GET /expenses?search=lunch - Returned descriptions contain the keyword", function () {
+        response.body.items.forEach(function (item) {
+            client.assert(
+                item.description.toLowerCase().includes("lunch"),
+                "Expected description to contain 'lunch', got: " + item.description
+            );
+        });
+    });
+%}
+
+### Get expenses sorted by amount ascending
+
+GET {{WebApi_HostAddress}}/expenses?page=1&pageSize=10&sortBy=amount&sortDirection=asc
+Accept: application/json
+
+> {%
+    client.test("GET /expenses sorted by amount asc - Status code is 200 OK", function () {
+        client.assert(response.status === 200, "Expected 200 OK");
+    });
+
+    client.test("GET /expenses sorted by amount asc - Items are in ascending order", function () {
+        const items = response.body.items;
+        for (var i = 1; i < items.length; i++) {
+            client.assert(items[i].amount >= items[i - 1].amount, "Items not sorted by amount asc at index " + i);
+        }
+    });
+%}
+
+### Get a specific expense by ID
+
+GET {{WebApi_HostAddress}}/expenses/{{ExpenseId}}
+Accept: application/json
+
+> {%
+    client.test("GET /expenses/{id} - Status code is 200 OK", function () {
+        client.assert(response.status === 200, "Expected 200 OK");
+    });
+
+    client.test("GET /expenses/{id} - Response matches the created expense", function () {
+        const body = response.body;
+        client.assert(body.id === client.global.get("ExpenseId"), "id mismatch");
+        client.assert(body.description === "Team lunch at the office", "description mismatch");
+        client.assert(body.amount === 42.50, "amount mismatch");
+        client.assert(body.category === "Meals", "category mismatch");
+    });
+%}
+
+### Get a non-existent expense - should return 404
+
+GET {{WebApi_HostAddress}}/expenses/00000000-0000-0000-0000-000000000000
+Accept: application/json
+
+> {%
+    client.test("GET /expenses/{id} (not found) - Status code is 404 Not Found", function () {
+        client.assert(response.status === 404, "Expected 404 Not Found");
+    });
+%}
+
+### Update the captured expense
+
+PUT {{WebApi_HostAddress}}/expenses/{{ExpenseId}}
+Content-Type: application/json
+
+{
+    "description": "Team lunch at the office (updated)",
+    "amount": 55.00,
+    "category": "Meals",
+    "date": "2026-04-01T12:00:00.000Z"
+}
+
+> {%
+    client.test("PUT /expenses/{id} - Status code is 200 OK", function () {
+        client.assert(response.status === 200, "Expected 200 OK");
+    });
+
+    client.test("PUT /expenses/{id} - Response reflects updated values", function () {
+        const body = response.body;
+        client.assert(body.description === "Team lunch at the office (updated)", "description not updated");
+        client.assert(body.amount === 55.00, "amount not updated");
+    });
+%}
+
+### Get audit history for the updated expense
+
+GET {{WebApi_HostAddress}}/expenses/{{ExpenseId}}/history
+Accept: application/json
+
+> {%
+    client.test("GET /expenses/{id}/history - Status code is 200 OK", function () {
+        client.assert(response.status === 200, "Expected 200 OK");
+    });
+
+    client.test("GET /expenses/{id}/history - Contains Created and Updated audit entries", function () {
+        const body = response.body;
+        client.assert(Array.isArray(body), "Expected an array of audit entries");
+        client.assert(body.length >= 2, "Expected at least 2 audit entries (Created + Updated)");
+        const actions = body.map(function (e) { return e.action; });
+        client.assert(actions.indexOf("Created") !== -1, "Missing Created audit entry");
+        client.assert(actions.indexOf("Updated") !== -1, "Missing Updated audit entry");
+    });
+
+    client.test("GET /expenses/{id}/history - Each entry has required fields", function () {
+        response.body.forEach(function (entry) {
+            client.assert(entry.id != null, "audit entry id is missing");
+            client.assert(entry.action != null, "audit entry action is missing");
+            client.assert(entry.changesJson != null, "audit entry changesJson is missing");
+            client.assert(entry.createdAtUtc != null, "audit entry createdAtUtc is missing");
+        });
+    });
+%}
+
+### Delete the captured expense
+
+DELETE {{WebApi_HostAddress}}/expenses/{{ExpenseId}}
+
+> {%
+    client.test("DELETE /expenses/{id} - Status code is 204 No Content", function () {
+        client.assert(response.status === 204, "Expected 204 No Content");
+    });
+%}
+
+### Get the deleted expense - should return 404
+
+GET {{WebApi_HostAddress}}/expenses/{{ExpenseId}}
+Accept: application/json
+
+> {%
+    client.test("GET /expenses/{id} after deletion - Status code is 404 Not Found", function () {
+        client.assert(response.status === 404, "Expected 404 Not Found after deletion");
+    });
+%}
+
+### Health check
+
+GET {{WebApi_HostAddress}}/health
+
+> {%
+    client.test("GET /health - Status code is 200 OK", function () {
+        client.assert(response.status === 200, "Expected 200 OK");
+    });
+%}
