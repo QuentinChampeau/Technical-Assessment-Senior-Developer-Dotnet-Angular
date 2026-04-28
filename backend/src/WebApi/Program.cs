@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
 using WebApi.Infrastructure.Api;
 using WebApi.Infrastructure.Persistence;
+using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -75,7 +76,13 @@ if (app.Environment.IsDevelopment())
             .LogError(e, "An error occurred while migrating the database.");
         return;
     }
+
     app.MapOpenApi();
+
+    app.MapScalarApiReference(options =>
+    {
+        options.Title = "Expense Management API";
+    });
 }
 
 // Middleware pipeline
