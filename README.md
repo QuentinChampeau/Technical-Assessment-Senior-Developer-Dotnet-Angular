@@ -27,6 +27,15 @@ application that provides an intuitive user interface for expense management.
 3. Run `ng serve` to start the development server
 4. Access the application at `http://localhost:4200`
 
+### API Documentation
+
+The backend exposes both the raw OpenAPI specification and an interactive API UI:
+
+- OpenAPI document: `/openapi/v1.json`
+- Scalar UI: `/scalar`
+
+Scalar provides a clean interactive interface to explore and manually test all available endpoints.
+
 ## Requirements
 
 ### Core Technologies
@@ -38,6 +47,7 @@ application that provides an intuitive user interface for expense management.
 - **PostgreSQL** and **Entity FrameworkCore** for data persistence
 - **C# 14.0** features where applicable
 - **xUnit, Moq, FluentAssertions** testing
+- **OpenAPI** and **Scalar UI** for interactive API documentation
 
 #### Frontend
 
@@ -165,20 +175,20 @@ Your implementation must include:
 ### Backend
 
 - [x] All three endpoints are functional and tested
-- [X] Proper input validation and error handling
-- [X] Redis integration working correctly
-- [X] Clean, readable, and maintainable code
+- [x] Proper input validation and error handling
+- [x] Redis integration working correctly
+- [x] Clean, readable, and maintainable code
 - [x] Appropriate use of HTTP status codes
-- [X] Basic logging implementation
+- [x] Basic logging implementation
 
 ### Frontend
 
 - [x] Responsive UI that works on mobile and desktop
 - [x] Implementation of all required features (dashboard, expense creation, viewing)
 - [x] Proper integration with backend API endpoints
-- [X] Clean, readable, and maintainable code
-- [X] Proper form validation and error handling
-- [X] Consistent styling and user experience
+- [x] Clean, readable, and maintainable code
+- [x] Proper form validation and error handling
+- [x] Consistent styling and user experience
 
 ## Submission Guidelines
 
