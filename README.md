@@ -243,3 +243,27 @@ We will review your submission and provide feedback.
 Good luck! 🚀
 
 <img src="https://media3.giphy.com/media/v1.Y2lkPTc5MGI3NjExaDRuZ3BmNXJjcGh5OTh5dmJ4YzFxbnJlZjlqaWg3ZXRlcHlicDZtZiZlcD12MV9pbnRlcm5hbF9naWZfYnlfaWQmY3Q9Zw/l1ugmrXA6gLlIbNE4/giphy.gif">
+
+## Architectural Decisions
+
+### Backend
+
+**Caching strategy**: Redis is used as a read-through cache with a 5-minute TTL (time to live).
+All list cache keys are registered in a Redis SET so any write operation (create, update, delete) can invalidate the full
+list in a single call, avoiding stale pagination results.
+
+**Audit trail**: Changes are tracked manually at the service layer rather than via EF Core interceptors. This keeps the
+audit shape explicit and testable without adding a dependency on EF Core's internal change-tracking pipeline.
+Each write operation records a `ChangesJson` payload — full snapshot on create/delete, old/new diff on update.
+
+**Validation**: Data annotations handle shape validation at the HTTP boundary (model binding).
+A second pass in `ExpenseService.ValidateRequest()` enforces business rules (e.g. description trimming before length
+check), keeping controllers thin.
+
+### Frontend
+
+**Route-level lazy loading**: Each route uses `loadComponent` to defer loading component bundles until the route is
+activated, reducing the initial bundle size.
+
+**E2E testing**: Playwright tests use `page.route()` interception to mock the backend API. This keeps the tests
+deterministic and runnable without a live backend, while still exercising the full Angular rendering and navigation stack.
