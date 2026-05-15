@@ -13,6 +13,9 @@ public class ListExpenseQueryHandler(AppDbContext dbContext,
         ILogger<ListExpenseQueryHandler> logger
     ) : IRequestHandler<ListExpenseQuery, PagedResponse<ExpenseDto>>
 {
+    private static readonly TimeSpan CacheDuration = TimeSpan.FromMinutes(5);
+    private const string ExpenseListCacheKeysSet = "expenses:list:keys";
+
     public async Task<PagedResponse<ExpenseDto>> Handle(
         ListExpenseQuery query,
         CancellationToken cancellationToken)
@@ -108,6 +111,9 @@ public class ListExpenseQueryHandler(AppDbContext dbContext,
             TotalCount = totalCount,
             TotalPages = (int)Math.Ceiling(totalCount / (double)pageSize)
         };
+
+        await cacheService.SetAsync(cacheKey, result, CacheDuration, cancellationToken);
+        await cacheService.RegisterKeyAsync(ExpenseListCacheKeysSet, cacheKey, cancellationToken);
 
         return result;
     }

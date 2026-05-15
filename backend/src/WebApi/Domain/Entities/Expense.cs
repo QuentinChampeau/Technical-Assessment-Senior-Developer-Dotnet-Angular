@@ -10,10 +10,10 @@ public sealed class Expense
      public DateTime CreatedAtUtc { get; set; }
      public DateTime UpdatedAtUtc { get; set; }
 
-     public void Update(string description, double amount, string category, DateTime date)
+     public void Update(string description, decimal amount, string category, DateTime date)
      {
           this.Description = description;
-          this.Amount = (decimal)amount;
+          this.Amount = amount;
           this.Category = category;
           this.Date = date;
           this.UpdatedAtUtc = DateTime.Now;

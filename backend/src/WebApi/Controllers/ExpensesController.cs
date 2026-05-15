@@ -33,7 +33,9 @@ public sealed class ExpensesController : ControllerBase
 
         if (Guid.Empty == expenseId) return BadRequest();
 
-        return Created($"/expenses/{expenseId}", new { id = expenseId });
+        var expense = await _mediator.Send(new GetExpenseQuery(expenseId), cancellationToken);
+
+        return CreatedAtAction(nameof(GetExpenseById), new { id = expenseId }, expense);
     }
 
     [HttpGet]
@@ -98,9 +100,9 @@ public sealed class ExpensesController : ControllerBase
     Guid id,
     CancellationToken cancellationToken)
     {
-        await _mediator.Send(new DeleteExpenseCommand(id), cancellationToken);
+        var deleted = await _mediator.Send(new DeleteExpenseCommand(id), cancellationToken);
 
-        return NoContent();
+        return deleted ? NoContent() : NotFound();
     }
 
     [HttpGet("{id:guid}/history")]

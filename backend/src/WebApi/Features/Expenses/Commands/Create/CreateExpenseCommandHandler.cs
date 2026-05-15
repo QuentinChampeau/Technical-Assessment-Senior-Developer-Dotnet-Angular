@@ -26,7 +26,7 @@ public class CreateExpenseCommandHandler(AppDbContext context, ICacheService cac
         {
             Id = Guid.NewGuid(),
             Description = command.Description.Trim(),
-            Amount = (decimal)command.Amount,
+            Amount = command.Amount,
             Category = command.Category.Trim(),
             Date = command.Date,
             CreatedAtUtc = now,
