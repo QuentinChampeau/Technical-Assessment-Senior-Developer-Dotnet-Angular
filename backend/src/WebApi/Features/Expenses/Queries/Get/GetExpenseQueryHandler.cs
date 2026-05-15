@@ -1,3 +1,7 @@
+using MediatR;
+using WebApi.Features.Expenses.DTOs;
+using WebApi.Infrastructure.Persistence;
+
 namespace WebApi.Features.Expenses.Queries.Get;
 
 public class GetExpenseQueryHandler(AppDbContext context) : IRequestHandler<GetExpenseQuery, ExpenseDto?>
@@ -13,6 +17,6 @@ public class GetExpenseQueryHandler(AppDbContext context) : IRequestHandler<GetE
             return null;
         }
 
-        return new ExpenseDto(expense.Id, expense.Description, expense.Amount, expense.Category, expense.Date, expense.CreateAtUtc, expense.UpdatedAtUtc))
+        return new ExpenseDto(expense.Id, expense.Description, expense.Amount, expense.Category, expense.Date, expense.CreatedAtUtc, expense.UpdatedAtUtc);
     }
 }

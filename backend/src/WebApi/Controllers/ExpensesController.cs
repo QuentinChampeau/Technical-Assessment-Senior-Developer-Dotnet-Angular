@@ -1,8 +1,13 @@
-using System.Runtime.InteropServices;
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Common.Pagination;
 using WebApi.Contracts.Expenses;
-using WebApi.Services;
+using WebApi.Features.Audits.Queries.List;
+using WebApi.Features.Expenses.Commands.Create;
+using WebApi.Features.Expenses.Commands.Delete;
+using WebApi.Features.Expenses.Commands.Update;
+using WebApi.Features.Expenses.Queries.Get;
+using WebApi.Features.Expenses.Queries.List;
 
 namespace WebApi.Controllers;
 
@@ -11,12 +16,10 @@ namespace WebApi.Controllers;
 public sealed class ExpensesController : ControllerBase
 {
     private readonly IMediator _mediator;
-    private readonly IExpenseService _expenseService;
 
-    public ExpensesController(IMediator mediator, IExpenseService expenseService)
+    public ExpensesController(IMediator mediator)
     {
-        this._mediator = mediator;
-        this._expenseService = expenseService;
+        _mediator = mediator;
     }
 
     [HttpPost]
@@ -26,7 +29,7 @@ public sealed class ExpensesController : ControllerBase
         [FromBody] CreateExpenseCommand command,
         CancellationToken cancellationToken)
     {
-        var expenseId = await _mediator.Send(command, ct);
+        var expenseId = await _mediator.Send(command, cancellationToken);
 
         if (Guid.Empty == expenseId) return BadRequest();
 
@@ -36,22 +39,16 @@ public sealed class ExpensesController : ControllerBase
     [HttpGet]
     [ProducesResponseType(typeof(PagedResponse<ExpenseResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResponse<ExpenseResponse>>> GetExpenses(
+        CancellationToken cancellationToken,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? category = null,
         [FromQuery] string? search = null,
         [FromQuery] string? sortBy = "date",
-        [FromQuery] string? sortDirection = "desc",
-        CancellationToken cancellationToken = default)
+        [FromQuery] string? sortDirection = "desc")
     {
-        var result = await _expenseService.GetPagedAsync(
-            page,
-            pageSize,
-            category,
-            search,
-            sortBy,
-            sortDirection,
-            cancellationToken);
+        var result = await _mediator.Send(
+            new ListExpenseQuery(page, pageSize, category, search, sortBy, sortDirection), cancellationToken);
 
         return Ok(result);
     }
@@ -87,11 +84,11 @@ public sealed class ExpensesController : ControllerBase
     [FromBody] UpdateExpenseCommand command,
     CancellationToken cancellationToken)
     {
-        if (id != command.Id) return Results.BadRequest();
+        if (id != command.Id) return BadRequest();
 
-        var result = await _mediator.Send(command, ct);
+        var result = await _mediator.Send(command, cancellationToken);
 
-        return result ? Results.NoContent() : Results.NotFound();
+        return result ? NoContent() : NotFound();
     }
 
     [HttpDelete("{id:guid}")]
@@ -101,9 +98,9 @@ public sealed class ExpensesController : ControllerBase
     Guid id,
     CancellationToken cancellationToken)
     {
-        await mediatr.Send(new DeleteExpenseCommand(id), ct);
+        await _mediator.Send(new DeleteExpenseCommand(id), cancellationToken);
 
-        return Results.NoContent();
+        return NoContent();
     }
 
     [HttpGet("{id:guid}/history")]
@@ -112,7 +109,7 @@ public sealed class ExpensesController : ControllerBase
         Guid id,
         CancellationToken cancellationToken)
     {
-        var history = await _expenseService.GetHistoryAsync(id, cancellationToken);
+        var history = await _mediator.Send(new ListAuditQuery(id), cancellationToken);
         return Ok(history);
     }
 }

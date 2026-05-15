@@ -1,3 +1,6 @@
+using MediatR;
+using WebApi.Infrastructure.Persistence;
+
 namespace WebApi.Features.Expenses.Commands.Delete;
 
 public class DeleteExpenseCommandHandler(AppDbContext context)

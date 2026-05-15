@@ -1,3 +1,5 @@
+using MediatR;
+
 namespace WebApi.Features.Expenses.Commands.Create;
 
 public record CreateExpenseCommand(

@@ -1,3 +1,6 @@
+using MediatR;
+using WebApi.Infrastructure.Persistence;
+
 namespace WebApi.Features.Expenses.Commands.Update;
 
 public class UpdateExpenseCommandHandler(AppDbContext context)
