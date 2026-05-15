@@ -1,48 +1,56 @@
+using MediatR;
 using Microsoft.AspNetCore.Mvc;
 using WebApi.Common.Pagination;
 using WebApi.Contracts.Expenses;
-using WebApi.Services;
+using WebApi.Features.Audits.Queries.List;
+using WebApi.Features.Expenses.Commands.Create;
+using WebApi.Features.Expenses.Commands.Delete;
+using WebApi.Features.Expenses.Commands.Update;
+using WebApi.Features.Expenses.Queries.Get;
+using WebApi.Features.Expenses.Queries.List;
 
 namespace WebApi.Controllers;
 
 [ApiController]
 [Route("expenses")]
-public sealed class ExpensesController(IExpenseService expenseService) : ControllerBase
+public sealed class ExpensesController : ControllerBase
 {
+    private readonly IMediator _mediator;
+
+    public ExpensesController(IMediator mediator)
+    {
+        _mediator = mediator;
+    }
+
     [HttpPost]
     [ProducesResponseType(typeof(ExpenseResponse), StatusCodes.Status201Created)]
     [ProducesResponseType(typeof(ValidationProblemDetails), StatusCodes.Status400BadRequest)]
     public async Task<ActionResult<ExpenseResponse>> CreateExpense(
-        [FromBody] CreateExpenseRequest request,
+        [FromBody] CreateExpenseCommand command,
         CancellationToken cancellationToken)
     {
-        var createdExpense = await expenseService.CreateAsync(request, cancellationToken);
+        var expenseId = await _mediator.Send(command, cancellationToken);
 
-        return CreatedAtAction(
-            nameof(GetExpenseById),
-            new { id = createdExpense.Id },
-            createdExpense);
+        if (Guid.Empty == expenseId) return BadRequest();
+
+        var expense = await _mediator.Send(new GetExpenseQuery(expenseId), cancellationToken);
+
+        return CreatedAtAction(nameof(GetExpenseById), new { id = expenseId }, expense);
     }
 
     [HttpGet]
     [ProducesResponseType(typeof(PagedResponse<ExpenseResponse>), StatusCodes.Status200OK)]
     public async Task<ActionResult<PagedResponse<ExpenseResponse>>> GetExpenses(
+        CancellationToken cancellationToken,
         [FromQuery] int page = 1,
         [FromQuery] int pageSize = 10,
         [FromQuery] string? category = null,
         [FromQuery] string? search = null,
         [FromQuery] string? sortBy = "date",
-        [FromQuery] string? sortDirection = "desc",
-        CancellationToken cancellationToken = default)
+        [FromQuery] string? sortDirection = "desc")
     {
-        var result = await expenseService.GetPagedAsync(
-            page,
-            pageSize,
-            category,
-            search,
-            sortBy,
-            sortDirection,
-            cancellationToken);
+        var result = await _mediator.Send(
+            new ListExpenseQuery(page, pageSize, category, search, sortBy, sortDirection), cancellationToken);
 
         return Ok(result);
     }
@@ -54,7 +62,7 @@ public sealed class ExpensesController(IExpenseService expenseService) : Control
         Guid id,
         CancellationToken cancellationToken)
     {
-        var expense = await expenseService.GetByIdAsync(id, cancellationToken);
+        var expense = await _mediator.Send(new GetExpenseQuery(id), cancellationToken);
 
         if (expense is null)
         {
@@ -75,17 +83,14 @@ public sealed class ExpensesController(IExpenseService expenseService) : Control
     [ProducesResponseType(StatusCodes.Status404NotFound)]
     public async Task<ActionResult<ExpenseResponse>> UpdateExpense(
     Guid id,
-    [FromBody] CreateExpenseRequest request,
+    [FromBody] UpdateExpenseCommand command,
     CancellationToken cancellationToken)
     {
-        var updatedExpense = await expenseService.UpdateAsync(id, request, cancellationToken);
+        if (id != command.Id) return BadRequest();
 
-        if (updatedExpense is null)
-        {
-            return NotFound();
-        }
+        var result = await _mediator.Send(command, cancellationToken);
 
-        return Ok(updatedExpense);
+        return result ? NoContent() : NotFound();
     }
 
     [HttpDelete("{id:guid}")]
@@ -95,14 +100,9 @@ public sealed class ExpensesController(IExpenseService expenseService) : Control
     Guid id,
     CancellationToken cancellationToken)
     {
-        var isDeleted = await expenseService.DeleteByIdAsync(id, cancellationToken);
+        var deleted = await _mediator.Send(new DeleteExpenseCommand(id), cancellationToken);
 
-        if (!isDeleted)
-        {
-            return NotFound();
-        }
-
-        return NoContent();
+        return deleted ? NoContent() : NotFound();
     }
 
     [HttpGet("{id:guid}/history")]
@@ -111,7 +111,7 @@ public sealed class ExpensesController(IExpenseService expenseService) : Control
         Guid id,
         CancellationToken cancellationToken)
     {
-        var history = await expenseService.GetHistoryAsync(id, cancellationToken);
+        var history = await _mediator.Send(new ListAuditQuery(id), cancellationToken);
         return Ok(history);
     }
 }

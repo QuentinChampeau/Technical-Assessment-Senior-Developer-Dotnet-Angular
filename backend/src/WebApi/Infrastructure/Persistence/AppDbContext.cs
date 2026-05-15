@@ -10,7 +10,7 @@ public sealed class AppDbContext(DbContextOptions<AppDbContext> options) : DbCon
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
-        modelBuilder.ApplyConfiguration(new ExpenseEntityTypeConfiguration());
+        //modelBuilder.ApplyConfiguration(new ExpenseEntityTypeConfiguration());
         modelBuilder.ApplyConfiguration(new AuditEntryEntityTypeConfiguration());
     }
 }
