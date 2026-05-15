@@ -4,11 +4,13 @@ using Microsoft.EntityFrameworkCore;
 using WebApi.Infrastructure.Api;
 using WebApi.Infrastructure.Persistence;
 using Scalar.AspNetCore;
+using WebApi.Common.Caching;
 
 var builder = WebApplication.CreateBuilder(args);
 
 /// Infrastructure
 builder.AddRedisClient(connectionName: "cache"); // Redis cache layer
+builder.Services.AddScoped<AuditInterceptor>(); // Interceptor for audit on savechanges
 builder.AddNpgsqlDbContext<AppDbContext>(connectionName: "database"); // PostgreSQL relational database
 
 // OpenAPI/Swagger
@@ -31,6 +33,9 @@ builder.Services.AddCors(options =>
             .AllowAnyMethod();
     });
 });
+
+// Register cache service
+builder.Services.AddSingleton<ICacheService, RedisCacheService>();
 
 // API validation behavior
 builder.Services.Configure<ApiBehaviorOptions>(options =>
